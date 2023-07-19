@@ -10,10 +10,10 @@ export default {
           Authorization: `Bearer ${token}`,
         },
       }
-      axios.get('users', options)
+      axios.get('entries', options)
         .then((response) => {
           if (response.status === 200) {
-            commit('INCOME_SET_DATA', response.data)
+            commit('ENTRIES_SET_DATA', response.data)
             resolve(response)
           }
         })

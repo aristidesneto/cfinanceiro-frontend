@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
+import { useStore } from 'vuex'
+
+const store = useStore()
 
 interface User {
   username: string
@@ -30,12 +33,12 @@ const incomes: Incomes = {
 }
 
 const ListIncomes = ref<Incomes[]>([...Array(10).keys()].map(() => incomes))
+const entries = ref({})
 
-function register() {
-  const data = JSON.parse(JSON.stringify(user.value))
-  // eslint-disable-next-line no-console
-  console.log('Registered: ', data)
-}
+onMounted(() => {
+  store.dispatch('incomes')
+    .then(response => entries.value = response.data)
+})
 </script>
 
 <template>
@@ -57,12 +60,11 @@ function register() {
                 Cadastrar receita
               </h2>
 
-              <form @submit.prevent="register">
+              <form>
                 <div class="grid grid-cols-1 gap-6 mt-4">
                   <div>
                     <label class="text-gray-700" for="username">Mês</label>
                     <input
-                      v-model="user.username"
                       class="w-full mt-2 border-gray-200 rounded-md focus:border-indigo-600 focus:ring focus:ring-opacity-40 focus:ring-indigo-500"
                       type="text"
                     >
@@ -71,7 +73,6 @@ function register() {
                   <div>
                     <label class="text-gray-700" for="emailAddress">Categoria</label>
                     <input
-                      v-model="user.email"
                       class="w-full mt-2 border-gray-200 rounded-md focus:border-indigo-600 focus:ring focus:ring-opacity-40 focus:ring-indigo-500"
                       type="text"
                     >
@@ -80,7 +81,6 @@ function register() {
                   <div>
                     <label class="text-gray-700" for="password">Valor</label>
                     <input
-                      v-model="user.password"
                       class="w-full mt-2 border-gray-200 rounded-md focus:border-indigo-600 focus:ring focus:ring-opacity-40 focus:ring-indigo-500"
                       type="text"
                     >
@@ -89,7 +89,6 @@ function register() {
                   <div>
                     <label class="text-gray-700" for="passwordConfirmation">Observação</label>
                     <input
-                      v-model="user.confirm"
                       class="w-full mt-2 border-gray-200 rounded-md focus:border-indigo-600 focus:ring focus:ring-opacity-40 focus:ring-indigo-500"
                       type="password"
                     >
@@ -143,13 +142,13 @@ function register() {
                 </thead>
 
                 <tbody class="bg-white">
-                  <tr v-for="(u, index) in ListIncomes" :key="index">
+                  <tr v-for="(u, index) in entries" :key="index">
                     <td
                       class="px-6 py-4 border-b border-gray-200 whitespace-nowrap"
                     >
                       <div class="flex items-center">
                         <div class="text-sm font-medium leading-5 text-gray-900">
-                          {{ u.month }}
+                          {{ u.title }}
                         </div>
                       </div>
                     </td>
@@ -158,7 +157,7 @@ function register() {
                       class="px-6 py-4 border-b border-gray-200 whitespace-nowrap"
                     >
                       <div class="text-sm leading-5 text-gray-900">
-                        {{ u.category }}
+                        {{ u.category_id }}
                       </div>
                     </td>
 
@@ -166,7 +165,7 @@ function register() {
                       class="px-6 py-4 border-b border-gray-200 whitespace-nowrap"
                     >
                       <div class="text-sm leading-5 text-gray-900">
-                        {{ u.value }}
+                        {{ u.amount }}
                       </div>
                     </td>
 

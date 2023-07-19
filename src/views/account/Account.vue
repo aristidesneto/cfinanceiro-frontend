@@ -1,16 +1,25 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useStore } from 'vuex'
+
+const store = useStore()
 
 interface User {
   name: string
   email: string
+  is_admin: string
+  status: string
   password: string
   password_confirmation: string
 }
 
+const userLoggado = store.getters.user
+
 const user = ref<User>({
-  name: 'Aristides Neto',
-  email: 'aristides@gmail.com',
+  name: userLoggado.name,
+  email: userLoggado.email,
+  is_admin: userLoggado.is_admin ? 'Sim' : 'Não',
+  status: userLoggado.status ? 'Ativado' : 'Desativado',
   password: '',
   password_confirmation: '',
 })
@@ -46,6 +55,26 @@ const user = ref<User>({
                 <label class="text-gray-700" for="emailAddress">E-mail</label>
                 <input
                   v-model="user.email"
+                  class="w-full mt-2 border-gray-200 rounded-md focus:border-indigo-600 focus:ring focus:ring-opacity-40 focus:ring-indigo-500"
+                  type="email"
+                >
+              </div>
+
+              <div>
+                <label class="text-gray-700" for="emailAddress">Administrador</label>
+                <input
+                  v-model="user.is_admin"
+                  disabled
+                  class="w-full mt-2 border-gray-200 rounded-md focus:border-indigo-600 focus:ring focus:ring-opacity-40 focus:ring-indigo-500"
+                  type="email"
+                >
+              </div>
+
+              <div>
+                <label class="text-gray-700" for="emailAddress">Status</label>
+                <input
+                  v-model="user.status"
+                  disabled
                   class="w-full mt-2 border-gray-200 rounded-md focus:border-indigo-600 focus:ring focus:ring-opacity-40 focus:ring-indigo-500"
                   type="email"
                 >

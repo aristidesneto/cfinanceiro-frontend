@@ -17,11 +17,11 @@ const dataIncome: Incomes = {
 }
 
 const income = ref<Incomes[]>([...Array(10).keys()].map(() => dataIncome))
-const users = ref({})
+const entries = ref({})
 
 onMounted(() => {
   store.dispatch('incomes')
-    .then(response => users.value = response.data)
+    .then(response => entries.value = response.data)
 })
 </script>
 
@@ -232,7 +232,7 @@ onMounted(() => {
           Despesas por categorias
         </h4>
         <div class="mt-8">
-          <p>{{ users }}</p>
+          <p>{{ entries }}</p>
         </div>
       </div>
     </div>
