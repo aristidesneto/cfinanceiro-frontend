@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useStore } from 'vuex'
+import { api, route_web } from '../../config/api'
 
 const router = useRouter()
 const store = useStore()
 
 interface FormData {
-  username: string
+  email: string
   password: string
 }
 
@@ -20,7 +21,7 @@ const isDisabled = ref(false)
 const btnText = 'Entrar'
 
 const dataLogin = ref<FormData>({
-  username: 'aristides@gmail.com',
+  email: 'aristides@admin.com',
   password: 'password',
 })
 
@@ -39,25 +40,29 @@ function loading() {
   message.value.btn_text = 'Aguarde...'
 }
 
+onMounted(() => {
+  store.dispatch('me')
+    .then(() => router.push('dashboard'))
+})
+
 function login() {
   loading()
-  if (dataLogin.value.username === '' || dataLogin.value.password === '') {
+  if (dataLogin.value.email === '' || dataLogin.value.password === '') {
     message.value.error = 'Informe as credenciais de login'
     finished()
     return false
   }
 
   const payload = {
-    username: dataLogin.value.username,
+    email: dataLogin.value.email,
     password: dataLogin.value.password,
   }
 
-  store.dispatch('login', { payload })
-    .then(() => router.push('/dashboard'))
+  store.dispatch('onLogin', { payload })
+    .then(() => router.push('dashboard'))
     .catch((errors) => {
-      message.value.error = errors.response.data.detail
+      message.value.error = errors.response.data.errors
       finished()
-      return false
     })
 }
 </script>
@@ -98,7 +103,7 @@ function login() {
         <label class="block">
           <span class="text-sm text-gray-700">E-mail</span>
           <input
-            v-model="dataLogin.username"
+            v-model="dataLogin.email"
             type="email"
             class="block w-full mt-1 border-gray-200 rounded-md focus:border-indigo-600 focus:ring focus:ring-opacity-40 focus:ring-indigo-500"
           >

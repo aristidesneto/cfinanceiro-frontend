@@ -19,10 +19,10 @@ const dataIncome: Incomes = {
 const income = ref<Incomes[]>([...Array(10).keys()].map(() => dataIncome))
 const entries = ref({})
 
-onMounted(() => {
-  store.dispatch('incomes')
-    .then(response => entries.value = response.data)
-})
+// onMounted(() => {
+//   store.dispatch('users')
+//     .then(response => entries.value = response.data.data)
+// })
 </script>
 
 <template>

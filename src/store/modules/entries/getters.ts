@@ -1,3 +1,4 @@
 export default {
-  entries: state => state.data_entries
+  entries_incomes: state => state.data_entries_income,
+  entries_expense: state => state.data_entries_expense,
 }

@@ -1,3 +1,4 @@
 export default {
-  data_entries: {},
+  data_entries_income: {},
+  data_entries_expense: {},
 }

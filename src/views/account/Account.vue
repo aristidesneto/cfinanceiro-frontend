@@ -1,27 +1,25 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useStore } from 'vuex'
 
 const store = useStore()
 
-interface User {
-  name: string
-  email: string
-  is_admin: string
-  status: string
-  password: string
-  password_confirmation: string
-}
+// interface User {
+//   name: string
+//   email: string
+//   is_admin: string
+//   status: string
+//   password: string
+//   password_confirmation: string
+// }
 
-const userLoggado = store.getters.user
+const user = ref({})
 
-const user = ref<User>({
-  name: userLoggado.name,
-  email: userLoggado.email,
-  is_admin: userLoggado.is_admin ? 'Sim' : 'Não',
-  status: userLoggado.status ? 'Ativado' : 'Desativado',
-  password: '',
-  password_confirmation: '',
+onMounted(() => {
+  store.dispatch('me')
+    .then(() => {
+      user.value = store.getters.user
+    })
 })
 </script>
 

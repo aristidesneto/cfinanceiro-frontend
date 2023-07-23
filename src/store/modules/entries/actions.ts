@@ -1,25 +1,21 @@
-import { useStore } from 'vuex'
-import axios from '../../../config/api'
+// import { useStore } from 'vuex'
+import { api } from '../../../config/api'
 
 export default {
-  incomes({ commit }) {
-    return new Promise((resolve, reject) => {
-      const token = useStore().getters.token
-      const options = {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-      axios.get('entries', options)
-        .then((response) => {
-          if (response.status === 200) {
-            commit('ENTRIES_SET_DATA', response.data)
-            resolve(response)
-          }
-        })
-        .catch((errors) => {
-          reject(errors)
-        })
+  async incomes({ commit }) {
+    const res = await api.get('entries', {
+      params: {
+        type: 'income',
+      },
     })
+    commit('ENTRIES_SET_INCOME', res.data)
+  },
+  async exnpenses({ commit }) {
+    const res = await api.get('entries', {
+      params: {
+        type: 'expense',
+      },
+    })
+    commit('ENTRIES_SET_EXPENSE', res.data)
   },
 }

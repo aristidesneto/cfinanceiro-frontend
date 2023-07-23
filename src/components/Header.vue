@@ -1,9 +1,19 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useStore } from 'vuex'
+import { useRouter } from 'vue-router'
 import { useSidebar } from '../composables/useSidebar'
 
 const dropdownOpen = ref(false)
 const { isOpen } = useSidebar()
+
+const router = useRouter()
+const store = useStore()
+
+async function logout() {
+  await store.dispatch('logout')
+  router.push('login')
+}
 </script>
 
 <template>
@@ -107,11 +117,11 @@ const { isOpen } = useSidebar()
               Minha conta
             </router-link>
             <router-link
-              to="/login"
+              to="/"
               class="block px-4 py-2 text-sm text-gray-700 hover:bg-indigo-600 hover:text-white"
             >
-              Sair
-            </router-link>
+              <a @click.prevent="logout">Saindo</a>
+            </router-link>            
           </div>
         </transition>
       </div>
