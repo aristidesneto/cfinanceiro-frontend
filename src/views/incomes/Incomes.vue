@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { formatReal } from '../../utils/functions'
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useStore } from 'vuex'
 
@@ -38,13 +39,15 @@ onMounted(() => {
   getCategories()
 })
 
+const startDate = new Date()
+
 // Functions
 function getIncomes() {
   const params = {
     type: 'income',
     order_by: '+:start_date',
-    start_period: '2023-01',
-    end_period: '2023-12',
+    start_period: `${startDate.getFullYear()}-01`,
+    end_period: `${startDate.getFullYear()}-12`,
   }
   store.dispatch('incomes', { params })
 }
@@ -188,7 +191,7 @@ async function onDelete(id) {
                       class="px-6 py-4 border-b border-gray-200 whitespace-nowrap"
                     >
                       <div class="text-sm leading-5 text-gray-900">
-                        R$ {{ value }}
+                        {{ formatReal(value) }}
                       </div>
                     </td>
 
@@ -266,7 +269,7 @@ async function onDelete(id) {
                         class="px-6 py-4 border-b border-gray-200 whitespace-nowrap"
                       >
                         <div class="text-sm leading-5 text-gray-900">
-                          R$ {{ item.amount }}
+                          {{ formatReal(item.amount) }}
                         </div>
                       </td>
 
