@@ -13,11 +13,9 @@ export default {
     const res = await api.get(`entries/${id}`)
     commit('ENTRIES_SET_INCOME_BY_ID', res.data)
   },
-  async expenses({ commit }) {
+  async expenses({ commit }, { params }) {
     const res = await api.get('entries', {
-      params: {
-        type: 'expense',
-      },
+      params
     })
     commit('ENTRIES_SET_EXPENSE', res.data)
   },

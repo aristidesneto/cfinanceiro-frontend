@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { formatReal } from '../../utils/functions'
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useStore } from 'vuex'
+import { formatReal } from '../../utils/functions'
 
 const store = useStore()
 

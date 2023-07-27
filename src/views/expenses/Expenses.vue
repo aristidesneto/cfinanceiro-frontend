@@ -1,5 +1,9 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import { useStore } from 'vuex'
+import { formatReal, formatDate } from '../../utils/functions'
+
+const store = useStore()
 
 interface User {
   username: string
@@ -23,6 +27,8 @@ interface Expenses {
   observation: string
 }
 
+const entries = computed(() => store.getters.entries_expense)
+
 const expenses: Expenses = {
   name: 'Apartamento',
   category: 'Habitação',
@@ -37,6 +43,26 @@ function register() {
   const data = JSON.parse(JSON.stringify(user.value))
   // eslint-disable-next-line no-console
   console.log('Registered: ', data)
+}
+
+onMounted(() => {
+  getIncomes()
+})
+
+const startDate = new Date()
+
+// Functions
+function getIncomes() {
+  const year = startDate.getFullYear()
+  const month = String(startDate.getMonth() + 1).padStart(2, '0')
+  const last_day = new Date(year, Number(month), 0).getDate()
+  const params = {
+    type: 'expense',
+    order_by: '+:due_date',
+    start_period: `${year}-${month}-01`,
+    end_period: `${year}-${month}-${last_day}`,
+  }
+  store.dispatch('expenses', { params })
 }
 </script>
 
@@ -153,13 +179,13 @@ function register() {
             </thead>
 
             <tbody class="bg-white">
-              <tr v-for="(u, index) in ListExpenses" :key="index">
+              <tr v-for="(item, index) in entries" :key="index">
                 <td
                   class="px-6 py-4 border-b border-gray-200 whitespace-nowrap"
                 >
                   <div class="flex items-center">
                     <div class="text-sm font-medium leading-5 text-gray-900">
-                      {{ u.name }}
+                      {{ item.title }}
                     </div>
                   </div>
                 </td>
@@ -168,7 +194,7 @@ function register() {
                   class="px-6 py-4 border-b border-gray-200 whitespace-nowrap"
                 >
                   <div class="text-sm leading-5 text-gray-900">
-                    {{ u.category }}
+                    {{ item.category.name }}
                   </div>
                 </td>
 
@@ -176,7 +202,7 @@ function register() {
                   class="px-6 py-4 border-b border-gray-200 whitespace-nowrap"
                 >
                   <div class="text-sm leading-5 text-gray-900">
-                    {{ u.due_date }}
+                    {{ formatDate(item.due_date) }}
                   </div>
                 </td>
 
@@ -184,7 +210,7 @@ function register() {
                   class="px-6 py-4 border-b border-gray-200 whitespace-nowrap"
                 >
                   <div class="text-sm leading-5 text-gray-900">
-                    {{ u.value }}
+                    {{ formatReal(item.amount) }}
                   </div>
                 </td>
 
@@ -192,7 +218,7 @@ function register() {
                   class="px-6 py-4 border-b border-gray-200 whitespace-nowrap"
                 >
                   <div class="text-sm leading-5 text-gray-900">
-                    {{ u.observation }}
+                    {{ item.observation }}
                   </div>
                 </td>
 
