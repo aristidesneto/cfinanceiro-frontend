@@ -202,7 +202,7 @@ function getIncomes() {
                   class="px-6 py-4 border-b border-gray-200 whitespace-nowrap"
                 >
                   <div class="text-sm leading-5 text-gray-900">
-                    {{ formatDate(item.due_date) }}
+                    {{ item.due_date }}
                   </div>
                 </td>
 
