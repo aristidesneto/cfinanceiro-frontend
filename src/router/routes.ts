@@ -1,5 +1,6 @@
 import DefaultLayout from '../components/DashboardLayout.vue'
 import Account from '../views/account/Account.vue'
+import Categories from '../views/categories/Categories.vue'
 import Dashboard from '../views/Dashboard.vue'
 import Expenses from '../views/expenses/Expenses.vue'
 import Incomes from '../views/incomes/Incomes.vue'
@@ -33,6 +34,11 @@ export default [
         path: '/incomes',
         name: 'Incomes',
         component: Incomes,
+      },
+      {
+        path: '/categories',
+        name: 'Categories',
+        component: Categories,
       },
       {
         path: '/account',
