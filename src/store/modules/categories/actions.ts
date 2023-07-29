@@ -1,3 +1,4 @@
+import { alertSuccess } from '../../../config/alert'
 import { api } from '../../../config/api'
 
 export default {
@@ -10,11 +11,14 @@ export default {
   },
   async createCategory({ commit }, { payload }) {
     await api.post('categories', payload)
+      .then(res => alertSuccess(res))
   },
   async deleteCategory({ commit }, { id }) {
     await api.delete(`categories/${id}`)
+      .then(res => alertSuccess(res))
   },
   async updateCategory({ commit }, { id, payload }) {
     await api.put(`categories/${id}`, payload)
+      .then(res => alertSuccess(res))
   },
 }

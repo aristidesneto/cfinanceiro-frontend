@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useStore } from 'vuex'
+import { alertConfirmed } from '../../config/alert'
 
 const store = useStore()
 
@@ -12,16 +13,6 @@ interface FormData {
   status: boolean
 }
 
-const paginate = ref({
-  type: 'all',
-  total_page: 10,
-  status: 'all',
-  page: 1,
-})
-
-const categories = computed(() => store.getters.categories_income)
-const meta = computed(() => store.getters.categories_meta_income)
-const open = ref(false)
 const dataCategory = reactive<FormData>({
   id: 0,
   name: '',
@@ -29,46 +20,62 @@ const dataCategory = reactive<FormData>({
   color: '',
   status: false,
 })
-const typeCategory = {
-  income: 'Receita',
-  expense: 'Despesa',
+
+const data = {
+  categoryType: {
+    income: 'Receita',
+    expense: 'Despesa',
+  },
 }
-const statusCategory = {
-  active: 'Ativo',
-  inactive: 'Inativo',
-}
-const optionsModal = ref({
-  title: '',
-  showCheckbox: false,
+
+const options = ref({
+  filter: {
+    type: 'all',
+    status: 'all',
+  },
+  paginate: {
+    total_page: 10,
+    page: 1,
+  },
+  modal: {
+    title: '',
+    showCheckbox: false,
+  },
+  open: false,
 })
+
+const categories = computed(() => store.getters.categories_income)
+const meta = computed(() => store.getters.categories_meta_income)
 
 onMounted(() => {
   getCategories()
 })
 
+// Functions
 function getCategories(current_page = 1) {
   const payload = {
-    type: paginate.value.type,
-    total_page: paginate.value.total_page,
-    status: paginate.value.status,
+    type: options.value.filter.type,
+    status: options.value.filter.status,
+    total_page: options.value.paginate.total_page,
     page: current_page,
   }
   store.dispatch('categories', { payload })
 }
 
 async function onCreate() {
-  open.value = false
+  options.value.open = false
   const payload = {
     name: dataCategory.name,
     type: dataCategory.type,
     color: dataCategory.color,
+    status: true,
   }
   await store.dispatch('createCategory', { payload })
   getCategories()
 }
 
 async function onUpdate() {
-  open.value = false
+  options.value.open = false
   const payload = {
     name: dataCategory.name,
     type: dataCategory.type,
@@ -80,38 +87,44 @@ async function onUpdate() {
   getCategories()
 }
 
-async function onDelete(id) {
-  await store.dispatch('deleteCategory', { id })
-  getCategories()
+function onDelete(id: number) {
+  alertConfirmed({
+    title: 'Deseja remover esse registro?',
+    confirmButtonText: 'Sim, remover',
+    confirmButtonColor: 'red',
+    cancelButtonText: 'Cancelar',
+  }).then(async (res) => {
+    if (res.isConfirmed) {
+      await store.dispatch('deleteCategory', { id })
+      getCategories()
+    }
+  })
 }
 
 function openCreate() {
-  optionsModal.value.title = 'Cadastrar'
-  optionsModal.value.showCheckbox = false
-  open.value = true
+  options.value.modal.title = 'Cadastrar'
+  options.value.modal.showCheckbox = false
+  options.value.open = true
   dataCategory.id = 0
   dataCategory.name = ''
   dataCategory.type = 'income'
-  dataCategory.color = ''
+  dataCategory.color = '#d91212'
 }
 
-function onEdit(item) {
-  optionsModal.value.title = 'Editar'
-  optionsModal.value.showCheckbox = true
-  open.value = true
+function onEdit(item: FormData) {
+  options.value.modal.title = 'Editar'
+  options.value.modal.showCheckbox = true
+  options.value.open = true
+
   dataCategory.id = item.id
   dataCategory.name = item.name
   dataCategory.type = item.type
   dataCategory.color = item.color
-  dataCategory.status = item.status === 'active'
+  dataCategory.status = Boolean(item.status)
 }
 
 function normalizeType(type) {
-  return typeCategory[type]
-}
-
-function normalizeStatus(status) {
-  return statusCategory[status]
+  return data.categoryType[type]
 }
 </script>
 
@@ -120,61 +133,7 @@ function normalizeStatus(status) {
     <h3 class="text-3xl font-medium text-gray-700">
       Categorias
     </h3>
-    <!-- {{ categories }} -->
   </div>
-
-  <!-- <div class="mt-8">
-    <div class="mt-4">
-      <div class="p-6 bg-white rounded-md shadow-md">
-        <h2 class="text-lg font-semibold text-gray-700">
-          Cadastro de categorias
-        </h2>
-
-        <form>
-          <div class="grid grid-cols-1 gap-6 mt-4 sm:grid-cols-3">
-            <div>
-              <label class="text-gray-700" for="username">Nome</label>
-              <input
-                v-model="dataCategory.name"
-                class="w-full mt-2 border-gray-200 rounded-md focus:border-indigo-600 focus:ring focus:ring-opacity-40 focus:ring-indigo-500"
-                type="text"
-              >
-            </div>
-
-            <div>
-              <label class="text-gray-700" for="emailAddress">Tipo</label>
-              <select
-                v-model="dataCategory.type"
-                class="w-full mt-2 border-gray-200 rounded-md focus:border-indigo-600 focus:ring focus:ring-opacity-40 focus:ring-indigo-500"
-              >
-                <option v-for="(item, key) in typeCategory" :key="key" :value="key">
-                  {{ item }}
-                </option>
-              </select>
-            </div>
-
-            <div>
-              <label class="text-gray-700" for="password">Cor</label>
-              <input
-                v-model="dataCategory.color"
-                class="w-full mt-2 border-gray-200 rounded-md focus:border-indigo-600 focus:ring focus:ring-opacity-40 focus:ring-indigo-500"
-                type="color"
-              >
-            </div>
-          </div>
-
-          <div class="flex justify-end mt-4">
-            <button
-              type="submit"
-              class="px-4 py-2 text-green-200 bg-green-800 rounded-md hover:bg-green-700 focus:outline-none focus:bg-green-700"
-            >
-              <FontAwesomeIcon :icon="['far', 'floppy-disk']" class="mr-2" /> Cadastrar
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div> -->
 
   <div class="mt-4">
     <div class="mt-6">
@@ -182,7 +141,7 @@ function normalizeStatus(status) {
         <div class="flex">
           <div class="relative">
             <select
-              v-model="paginate.total_page"
+              v-model="options.paginate.total_page"
               class="block w-full h-full px-4 py-2 pr-8 leading-tight text-gray-700 bg-white border border-gray-400 rounded-l appearance-none focus:outline-none focus:bg-white focus:border-gray-500"
               @change="getCategories"
             >
@@ -209,13 +168,13 @@ function normalizeStatus(status) {
 
           <div class="relative">
             <select
-              v-model="paginate.status"
+              v-model="options.filter.status"
               class="block w-full h-full px-4 py-2 pr-8 leading-tight text-gray-700 bg-white border-t border-b border-r border-gray-400 rounded-r appearance-none sm:rounded-r-none sm:border-r-0 focus:outline-none focus:border-l focus:border-r focus:bg-white focus:border-gray-500"
               @change="getCategories"
             >
               <option value="all">Todos</option>
-              <option value="active">Ativo</option>
-              <option value="inactive">Inativo</option>
+              <option value="1">Ativo</option>
+              <option value="0">Inativo</option>
             </select>
 
             <div
@@ -235,7 +194,7 @@ function normalizeStatus(status) {
 
           <div class="relative">
             <select
-              v-model="paginate.type"
+              v-model="options.filter.type"
               class="block w-full h-full px-4 py-2 pr-8 leading-tight text-gray-700 bg-white border-t border-b border-r border-gray-400 rounded-r appearance-none sm:rounded-r-none sm:border-r-0 focus:outline-none focus:border-l focus:border-r focus:bg-white focus:border-gray-500"
               @change="getCategories"
             >
@@ -290,12 +249,12 @@ function normalizeStatus(status) {
       <!-- modal -->
       <div
         :class="`modal ${
-          !open && 'opacity-0 pointer-events-none'
+          !options.open && 'opacity-0 pointer-events-none'
         } z-50 fixed w-full h-full top-0 left-0 flex items-center justify-center`"
       >
         <div
           class="absolute w-full h-full bg-gray-900 opacity-50 modal-overlay"
-          @click="open = false"
+          @click="options.open = false"
         />
 
         <div
@@ -306,7 +265,7 @@ function normalizeStatus(status) {
             <!-- Title -->
             <div class="flex items-center justify-between pb-3">
               <p class="text-2xl font-bold">
-                <span v-text="optionsModal.title" /> categoria
+                <span v-text="options.modal.title" /> categoria
               </p>
             </div>
 
@@ -328,7 +287,7 @@ function normalizeStatus(status) {
                     v-model="dataCategory.type"
                     class="w-full mt-2 border-gray-200 rounded-md focus:border-indigo-600 focus:ring focus:ring-opacity-40 focus:ring-indigo-500"
                   >
-                    <option v-for="(item, key) in typeCategory" :key="key" :value="key">
+                    <option v-for="(item, key) in data.categoryType" :key="key" :value="key">
                       {{ item }}
                     </option>
                   </select>
@@ -343,7 +302,7 @@ function normalizeStatus(status) {
                   >
                 </div>
 
-                <div v-if="optionsModal.showCheckbox">
+                <div v-if="options.modal.showCheckbox">
                   <label>
                     <input
                       v-model="dataCategory.status"
@@ -359,7 +318,7 @@ function normalizeStatus(status) {
             <div class="flex justify-end mt-8">
               <button
                 class="p-3 px-6 py-3 mr-2 text-indigo-500 bg-transparent rounded-lg hover:bg-gray-100 hover:text-indigo-400 focus:outline-none"
-                @click="open = false"
+                @click="options.open = false"
               >
                 Fechar
               </button>
@@ -431,9 +390,9 @@ function normalizeStatus(status) {
               <td class="px-6 py-4 text-gray-700 border-b">
                 <span
                   class="inline-flex px-2 text-xs font-semibold leading-5 text-white rounded-full"
-                  :class="[item.status === 'active' ? 'bg-green-600' : 'bg-red-400']"
+                  :class="[item.status ? 'bg-green-600' : 'bg-red-400']"
                 >
-                  {{ normalizeStatus(item.status) }}
+                  {{ item.status ? 'Ativo' : 'Inativo' }}
                 </span>
               </td>
               <td class="px-6 py-4 text-gray-500 border-b text-center">
