@@ -55,6 +55,7 @@ function getIncomes() {
 function getCategories() {
   const payload = {
     type: 'income',
+    status: 'active',
   }
   store.dispatch('categories', { payload })
 }
@@ -115,7 +116,7 @@ async function onDelete(id) {
                   v-model="dataIncome.category_id"
                   class="w-full mt-2 border-gray-200 rounded-md focus:border-indigo-600 focus:ring focus:ring-opacity-40 focus:ring-indigo-500"
                 >
-                  <option v-for="item in categories" :key="item.id" :value="item.id">
+                  <option v-for="item in categories.data" :key="item.id" :value="item.id">
                     {{ item.name }}
                   </option>
                 </select>
