@@ -7,6 +7,9 @@ import { far } from '@fortawesome/free-regular-svg-icons'
 import VueSweetalert2 from 'vue-sweetalert2'
 import 'sweetalert2/dist/sweetalert2.min.css'
 
+import VueDatePicker from '@vuepic/vue-datepicker'
+import '@vuepic/vue-datepicker/dist/main.css'
+
 import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router'
@@ -22,6 +25,7 @@ const app = createApp(App)
 
 app.component('DefaultLayout', DashboardLayout)
 app.component('FontAwesomeIcon', FontAwesomeIcon)
+app.component('VueDatePicker', VueDatePicker)
 
 app.use(router)
 app.use(store)

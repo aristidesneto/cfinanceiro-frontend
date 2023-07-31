@@ -1,396 +1,428 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useStore } from 'vuex'
+import { Input, Modal, Select } from 'flowbite-vue'
+import { vMaska } from "maska"
 import { formatReal } from '../../utils/functions'
+import { alertConfirmed } from '../../config/alert'
 
 const store = useStore()
 
+const optionsMaska = {
+  preProcess: value => value.replace(/[$,]/g, ''),
+  postProcess: value => {
+    value = value.replace('.', '').replace(',', '').replace(/\D/g, '')
+    const options = { minimumFractionDigits: 2 }
+    const result = new Intl.NumberFormat('pt-BR', options)
+      .format(Number.parseFloat(value) / 100)
+    return `R$ ${result}`
+  },
+}
+
 interface FormData {
   is_recurring: number
-  start_date: string
-  category_id: number
-  amount: string
-  amount_sum: string
+  start_date: object
+  category_id: string
+  amount: number
+  amount_sum: number
   observation: string
 }
 
-const dataIncome = reactive<FormData>({
+const now = new Date()
+
+const dataIncome = ref<FormData>({
   is_recurring: 0,
-  start_date: '07/2023',
-  category_id: 23,
-  amount_sum: '',
-  amount: '5000,45',
-  observation: 'Teste',
+  start_date: {
+    month: now.getMonth(),
+    year: now.getFullYear(),
+  },
+  category_id: '',
+  amount_sum: 0,
+  amount: 0,
+  observation: '',
 })
 
-const open = ref(false)
+const dataEditIncome = ref({
+  start_date: {},
+  category_id: '',
+  amount_sum: '',
+  amount: '',
+  observation: '',
+})
+
+const options = ref({
+  isShowModal: false,
+  editItemIncome: {
+    edit: false,
+    id: 0,
+  },
+})
+
 const entries = computed(() => store.getters.entries_incomes)
 const group_income = computed(() => store.getters.entries_group_income)
-const categories = computed(() => store.getters.categories_income)
-const entry_id = ref({
-  amount: '',
-  category: '',
-  observation: '',
-  month_extension: '',
-})
+const detailed_month = ref()
+const categories = computed(() => store.getters.categories_select)
 
 onMounted(() => {
   getIncomes()
   getCategories()
 })
 
-const startDate = new Date()
-
 // Functions
-function getIncomes() {
+async function getIncomes() {
   const params = {
     type: 'income',
     order_by: '+:start_date',
-    start_period: `${startDate.getFullYear()}-01`,
-    end_period: `${startDate.getFullYear()}-12`,
+    start_period: `${now.getFullYear()}-01`,
+    end_period: `${now.getFullYear()}-12`,
   }
-  store.dispatch('incomes', { params })
+  await store.dispatch('incomes', { params })
 }
 
 function getCategories() {
   const payload = {
     type: 'income',
-    status: 'active',
+    status: 1,
   }
   store.dispatch('categories', { payload })
+}
+
+function closeModal() {
+  options.value.isShowModal = false
+  options.value.editItemIncome.edit = false
+}
+
+function getDetailMonth(month: string) {
+  return Object.values(entries.value).filter((item) => {
+    return item.month_extension === month
+  })
+}
+
+function editItemIncome(item) {
+  options.value.editItemIncome.edit = true
+  options.value.editItemIncome.id = item.id
+  dataEditIncome.value.start_date = {
+    month: item.start_date_month - 1,
+    year: item.start_date_year,
+  }
+  dataEditIncome.value.category_id = item.category.id
+  dataEditIncome.value.amount = item.amount
+  dataEditIncome.value.observation = item.observation
+}
+
+async function saveItemIncome(item) {
+  options.value.editItemIncome.edit = false
+  const payload = {
+    start_date: {
+      month: dataEditIncome.value.start_date.month + 1,
+      year: dataEditIncome.value.start_date.year,
+    },
+    category_id: dataEditIncome.value.category_id,
+    amount: dataEditIncome.value.amount,
+    observation: dataEditIncome.value.observation,
+  }
+  const id = item.id
+  await store.dispatch('updateIncome', { id, payload })
+  await getIncomes()
+  detailed_month.value = getDetailMonth(item.month_extension)
 }
 
 async function onCreate() {
   const payload = {
     type: 'income',
-    is_recurring: dataIncome.is_recurring,
-    start_date: dataIncome.start_date,
-    category_id: dataIncome.category_id,
-    amount: dataIncome.amount,
-    observation: dataIncome.observation,
+    is_recurring: dataIncome.value.is_recurring,
+    start_date: {
+      month: dataIncome.value.start_date.month + 1,
+      year: dataIncome.value.start_date.year,
+    },
+    category_id: dataIncome.value.category_id,
+    amount: dataIncome.value.amount,
+    observation: dataIncome.value.observation,
   }
   await store.dispatch('createIncome', { payload })
-  getIncomes()
+  await getIncomes()
+  dataIncome.value.start_date = {
+    month: now.getMonth(),
+    year: now.getFullYear(),
+  }
+  dataIncome.value.amount = 0
 }
 
-async function onDelete(id) {
-  await store.dispatch('removeIncome', { id })
-  getIncomes()
+async function onDelete(item) {
+  alertConfirmed({
+    title: 'Deseja remover esse registro?',
+    confirmButtonText: 'Sim, remover',
+    confirmButtonColor: 'red',
+    cancelButtonText: 'Cancelar',
+  }).then(async (res) => {
+    if (res.isConfirmed) {
+      const id = item.id
+      await store.dispatch('removeIncome', { id })
+      await getIncomes()
+      detailed_month.value = getDetailMonth(item.month_extension)
+    }
+  })
 }
 
-// async function getByID(item) {
-//   entry_id.value = item
-//   open.value = true
-// }
+async function openEdit(month: string) {
+  options.value.isShowModal = true
+  detailed_month.value = getDetailMonth(month)
+}
 </script>
 
 <template>
   <div>
     <div class="flex">
       <h3 class="text-3xl font-semibold text-gray-700">
-        Receitas de 2023
+        Receitas de {{ now.getFullYear() }}
       </h3>
     </div>
 
     <div class="mt-8">
-      <div class="mt-4">
-        <div class="p-6 bg-white rounded-md shadow-md">
-          <h2 class="text-lg font-semibold text-gray-700">
-            Lançamento de Receitas
-          </h2>
-
-          <form @submit.prevent="onCreate">
-            <div class="grid grid-cols-1 gap-6 mt-4 sm:grid-cols-3">
-              <div>
-                <label class="text-gray-700" for="username">Mês</label>
-                <input
-                  v-model="dataIncome.start_date"
-                  class="w-full mt-2 border-gray-200 rounded-md focus:border-indigo-600 focus:ring focus:ring-opacity-40 focus:ring-indigo-500"
-                  type="text"
-                >
-              </div>
-
-              <div>
-                <label class="text-gray-700" for="emailAddress">Categoria</label>
-                <select
-                  v-model="dataIncome.category_id"
-                  class="w-full mt-2 border-gray-200 rounded-md focus:border-indigo-600 focus:ring focus:ring-opacity-40 focus:ring-indigo-500"
-                >
-                  <option v-for="item in categories.data" :key="item.id" :value="item.id">
-                    {{ item.name }}
-                  </option>
-                </select>
-              </div>
-
-              <div>
-                <label class="text-gray-700" for="password">Valor</label>
-                <input
-                  v-model="dataIncome.amount"
-                  class="w-full mt-2 border-gray-200 rounded-md focus:border-indigo-600 focus:ring focus:ring-opacity-40 focus:ring-indigo-500"
-                  type="text"
-                >
-              </div>
-
-              <div>
-                <label class="text-gray-700" for="passwordConfirmation">Observação</label>
-                <input
-                  v-model="dataIncome.observation"
-                  class="w-full mt-2 border-gray-200 rounded-md focus:border-indigo-600 focus:ring focus:ring-opacity-40 focus:ring-indigo-500"
-                  type="text"
-                >
-              </div>
-            </div>
-
-            <div class="flex justify-end mt-4">
-              <button
-                type="submit"
-                class="px-4 py-2 text-green-200 bg-green-800 rounded-md hover:bg-green-700 focus:outline-none focus:bg-green-700"
-              >
-                <FontAwesomeIcon :icon="['far', 'floppy-disk']" class="mr-2" /> Cadastrar
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-
       <div class="flex">
-        <div class="flex-1 mt-8">
-          <div class="py-2 -my-2 overflow-x-auto sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
-            <div
-              class="inline-block min-w-full overflow-hidden align-middle border-b border-gray-200 shadow sm:rounded-lg"
-            >
-              <table class="min-w-full">
-                <thead>
-                  <tr>
-                    <th
-                      class="px-6 py-3 text-xs font-medium leading-4 tracking-wider text-left text-gray-500 uppercase border-b border-gray-200 bg-gray-50"
-                    >
-                      Mês
-                    </th>
-                    <th
-                      class="px-6 py-3 text-xs font-medium leading-4 tracking-wider text-left text-gray-500 uppercase border-b border-gray-200 bg-gray-50"
-                    >
-                      Valor total
-                    </th>
-                    <!-- <th class="px-6 py-3 border-b border-gray-200 bg-gray-50" /> -->
-                  </tr>
-                </thead>
+        <!-- Column 1 -->
+        <div class="flex-1 mr-8">
+          <div class="p-6 bg-white rounded-md shadow-md">
+            <h2 class="text-lg font-semibold text-gray-700">
+              Lançamento de Receitas
+            </h2>
 
-                <tbody class="bg-white">
-                  <tr v-for="(value, key) in group_income" :key="key">
-                    <td
-                      class="px-6 py-4 border-b border-gray-200 whitespace-nowrap"
-                    >
-                      <div class="flex items-center">
-                        <div class="text-sm font-medium leading-5 text-gray-900">
-                          {{ key }}
-                        </div>
-                      </div>
-                    </td>
+            <form @submit.prevent="onCreate">
+              <div class="grid grid-cols-1 gap-6 mt-4 sm:grid-cols-1">
+                <div>
+                  <VueDatePicker
+                    v-model="dataIncome.start_date"
+                    month-picker
+                  />
+                </div>
 
-                    <td
-                      class="px-6 py-4 border-b border-gray-200 whitespace-nowrap"
-                    >
-                      <div class="text-sm leading-5 text-gray-900">
-                        {{ formatReal(value) }}
-                      </div>
-                    </td>
+                <div>
+                  <Select
+                    v-model="dataIncome.category_id"
+                    :options="categories"
+                    label="Categorias"
+                  />
+                </div>
 
-                    <!-- <td
-                      class="px-6 py-4 text-sm font-medium leading-5 text-right border-b border-gray-200 whitespace-nowrap"
-                    >
-                      <button
-                        class="px-4 py-2 text-gray-200 bg-blue-800 rounded-md hover:bg-blue-700 focus:outline-none focus:bg-blue-700 mr-2"
-                        title="Visualizar registro"
-                      >
-                        <FontAwesomeIcon :icon="['far', 'eye']" />
-                      </button>
-                    </td> -->
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+                <div>
+                  <Input
+                    v-model="dataIncome.amount"
+                    v-maska:[optionsMaska]
+                    label="Valor"
+                  />
+                </div>
+
+                <div>
+                  <Input
+                    v-model="dataIncome.observation"
+                    label="Observação"
+                  />
+                </div>
+              </div>
+
+              <div class="flex justify-end mt-4">
+                <button
+                  type="submit"
+                  class="px-4 py-2 text-green-200 bg-green-800 rounded-md hover:bg-green-700 focus:outline-none focus:bg-green-700"
+                >
+                  <FontAwesomeIcon :icon="['far', 'floppy-disk']" class="mr-2" /> Cadastrar
+                </button>
+              </div>
+            </form>
           </div>
         </div>
-
-        <div class="flex-1 ml-8">
-          <div class="mt-8">
-            <div class="py-2 -my-2 overflow-x-auto sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
-              <div
-                class="inline-block min-w-full overflow-hidden align-middle border-b border-gray-200 shadow sm:rounded-lg"
-              >
-                <table class="min-w-full">
-                  <thead>
-                    <tr>
-                      <th
-                        class="px-6 py-3 text-xs font-medium leading-4 tracking-wider text-left text-gray-500 uppercase border-b border-gray-200 bg-gray-50"
-                      >
-                        Mês
-                      </th>
-                      <th
-                        class="px-6 py-3 text-xs font-medium leading-4 tracking-wider text-left text-gray-500 uppercase border-b border-gray-200 bg-gray-50"
-                      >
-                        Categoria
-                      </th>
-                      <th
-                        class="px-6 py-3 text-xs font-medium leading-4 tracking-wider text-left text-gray-500 uppercase border-b border-gray-200 bg-gray-50"
-                      >
-                        Valor
-                      </th>
-                      <th
-                        class="px-6 py-3 text-xs font-medium leading-4 tracking-wider text-left text-gray-500 uppercase border-b border-gray-200 bg-gray-50"
-                      >
-                        Observação
-                      </th>
-                      <th class="px-6 py-3 border-b border-gray-200 bg-gray-50" />
-                    </tr>
-                  </thead>
-
-                  <tbody class="bg-white">
-                    <tr v-for="(item, index) in entries" :key="index">
-                      <td
-                        class="px-6 py-4 border-b border-gray-200 whitespace-nowrap"
-                      >
-                        <div class="flex items-center">
-                          <div class="text-sm font-medium leading-5 text-gray-900">
-                            {{ item.month_extension }}
-                          </div>
-                        </div>
-                      </td>
-
-                      <td
-                        class="px-6 py-4 border-b border-gray-200 whitespace-nowrap"
-                      >
-                        <div class="text-sm leading-5 text-gray-900">
-                          {{ item.category.name }}
-                        </div>
-                      </td>
-
-                      <td
-                        class="px-6 py-4 border-b border-gray-200 whitespace-nowrap"
-                      >
-                        <div class="text-sm leading-5 text-gray-900">
-                          {{ formatReal(item.amount) }}
-                        </div>
-                      </td>
-
-                      <td
-                        class="px-6 py-4 border-b border-gray-200 whitespace-nowrap"
-                      >
-                        <div class="text-sm leading-5 text-gray-900">
-                          {{ item.observation }}
-                        </div>
-                      </td>
-
-                      <td
-                        class="px-6 py-4 text-sm font-medium leading-5 text-right border-b border-gray-200 whitespace-nowrap"
-                      >
-                        <!-- <button
-                          class="px-4 py-2 text-gray-200 bg-green-800 rounded-md hover:bg-green-700 focus:outline-none focus:bg-green-700 mr-2"
-                          title="Editar registro"
-                          @click="getByID(item)"
-                        >
-                          <FontAwesomeIcon :icon="['far', 'pen-to-square']" />
-                        </button> -->
-                        <button
-                          class="px-4 py-2 text-gray-200 bg-red-800 rounded-md hover:bg-red-700 focus:outline-none focus:bg-red-700"
-                          title="Remover registro"
-                          @click="onDelete(item.id)"
-                        >
-                          <FontAwesomeIcon :icon="['far', 'trash-can']" />
-                        </button>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
+        <!-- Column 2 -->
+        <div class="flex-1">
+          <div class="overflow-hidden bg-white rounded-md shadow">
+            <table class="w-full text-left border-collapse">
+              <thead class="border-b">
+                <tr>
+                  <th
+                    class="px-5 py-3 text-sm font-medium text-gray-100 uppercase bg-indigo-800"
+                  >
+                    Mês
+                  </th>
+                  <th
+                    class="px-5 py-3 text-sm font-medium text-gray-100 uppercase bg-indigo-800"
+                  >
+                    Valor total
+                  </th>
+                  <th
+                    class="px-5 py-3 text-sm font-medium text-gray-100 uppercase bg-indigo-800 text-center"
+                  >
+                    Ação
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="(value, key) in group_income" :key="key"
+                  class="hover:bg-gray-200"
+                >
+                  <td class="px-6 py-4 text-gray-700 border-b">
+                    {{ key }}
+                  </td>
+                  <td class="px-6 py-4 text-gray-700 border-b">
+                    {{ formatReal(value) }}
+                  </td>
+                  <td class="px-6 py-4 text-gray-500 border-b text-center">
+                    <button
+                      class="px-2 py-1 text-sm text-white bg-indigo-600 rounded-md hover:bg-indigo-500 focus:outline-none mr-2"
+                      title="Editar registro"
+                      @click="openEdit(key)"
+                    >
+                      <FontAwesomeIcon :icon="['far', 'eye']" class="" />
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
     </div>
 
     <!-- Modal -->
-    <div
-      :class="`modal ${
-        !open && 'opacity-0 pointer-events-none'
-      } z-50 fixed w-full h-full top-0 left-0 flex items-center justify-center`"
-    >
-      <div
-        class="absolute w-full h-full bg-gray-900 opacity-50 modal-overlay"
-        @click="open = false"
-      />
-
-      <div
-        class="z-50 w-11/12 mx-auto overflow-y-auto bg-white rounded shadow-lg modal-container md:max-w-md"
-      >
-        <!-- <div
-          class="absolute top-0 right-0 z-50 flex flex-col items-center mt-4 mr-4 text-sm text-white cursor-pointer modal-close"
-        >
-          <svg
-            class="text-white fill-current"
-            xmlns="http://www.w3.org/2000/svg"
-            width="18"
-            height="18"
-            viewBox="0 0 18 18"
-          >
-            <path
-              d="M14.53 4.53l-1.06-1.06L9 7.94 4.53 3.47 3.47 4.53 7.94 9l-4.47 4.47 1.06 1.06L9 10.06l4.47 4.47 1.06-1.06L10.06 9z"
-            />
-          </svg>
-          <span class="text-sm">(Esc)</span>
-        </div> -->
-
-        <!-- Add margin if you want to see some of the overlay behind the modal -->
-        <div class="px-6 py-4 text-left modal-content">
-          <!-- Title -->
-          <div class="flex items-center justify-between pb-3">
-            <p class="text-2xl font-bold">
-              Modal Title
-            </p>
-            <!-- <div class="z-50 cursor-pointer modal-close" @click="open = false">
-              <svg
-                class="text-black fill-current"
-                xmlns="http://www.w3.org/2000/svg"
-                width="18"
-                height="18"
-                viewBox="0 0 18 18"
-              >
-                <path
-                  d="M14.53 4.53l-1.06-1.06L9 7.94 4.53 3.47 3.47 4.53 7.94 9l-4.47 4.47 1.06 1.06L9 10.06l4.47 4.47 1.06-1.06L10.06 9z"
-                />
-              </svg>
-            </div> -->
-          </div>
-
-          <!-- Body -->
-          <p>Mês: {{ entry_id.month_extension }}</p>
-          <p>Valor: {{ entry_id.amount }}</p>
-          <p>Categoria: {{ entry_id.category.name }}</p>
-          <p>Observação: {{ entry_id.observation }}</p>
-
-          <!-- Footer -->
-          <div class="flex justify-end pt-2">
-            <button
-              class="p-3 px-6 py-3 mr-2 text-indigo-500 bg-transparent rounded-lg hover:bg-gray-100 hover:text-indigo-400 focus:outline-none"
-              @click="open = false"
-            >
-              Close
-            </button>
-            <button
-              class="px-6 py-3 font-medium tracking-wide text-white bg-indigo-600 rounded-md hover:bg-indigo-500 focus:outline-none"
-            >
-              Action
-            </button>
-          </div>
+    <Modal v-if="options.isShowModal" size="7xl" @close="closeModal">
+      <template #header>
+        <div class="flex items-center text-lg">
+          Detalhes do mês
         </div>
-      </div>
-    </div>
+      </template>
+      <template #body>
+        <table class="min-w-full">
+          <thead class="border-b">
+            <tr>
+              <th class="px-4 py-2 text-xs leading-4 tracking-wider text-left text-white uppercase border-b border-gray-200 bg-gray-600">
+                Mês
+              </th>
+              <th class="px-4 py-2 text-xs leading-4 tracking-wider text-left text-white uppercase border-b border-gray-200 bg-gray-600">
+                Categoria
+              </th>
+              <th class="px-4 py-2 text-xs leading-4 tracking-wider text-left text-white uppercase border-b border-gray-200 bg-gray-600">
+                Valor
+              </th>
+              <th class="px-4 py-2 text-xs leading-4 tracking-wider text-left text-white uppercase border-b border-gray-200 bg-gray-600">
+                Observação
+              </th>
+              <th class="px-4 py-2 text-xs leading-4 tracking-wider text-left text-white uppercase border-b border-gray-200 bg-gray-600 text-center">
+                Ação
+              </th>
+            </tr>
+          </thead>
+          <tbody class="bg-white">
+            <tr
+              v-for="(item, index) in detailed_month" :key="index"
+              class="hover:bg-gray-200"
+            >
+              <td
+                class="px-4 py-4 border-b border-gray-200 whitespace-nowrap"
+              >
+                <VueDatePicker
+                  v-if="options.editItemIncome.edit && options.editItemIncome.id === item.id"
+                  v-model="dataEditIncome.start_date"
+                  month-picker
+                />
+                <div v-else class="flex items-center">
+                  <div class="text-sm leading-5 text-gray-900">
+                    {{ item.month_extension }}
+                  </div>
+                </div>
+              </td>
+
+              <td
+                class="px-4 py-2 border-b border-gray-200 whitespace-nowrap"
+              >
+                <Select
+                  v-if="options.editItemIncome.edit && options.editItemIncome.id === item.id"
+                  v-model="dataEditIncome.category_id"
+                  :options="categories"
+                />
+                <div v-else class="text-sm leading-5 text-gray-900">
+                  {{ item.category.name }}
+                </div>
+              </td>
+
+              <td
+                class="px-4 py-2 border-b border-gray-200 whitespace-nowrap"
+              >
+                <Input
+                  v-if="options.editItemIncome.edit && options.editItemIncome.id === item.id"
+                  v-model="dataEditIncome.amount"
+                  v-maska:[optionsMaska]
+                />
+                <div v-else class="text-sm leading-5 text-gray-900">
+                  {{ formatReal(item.amount) }}
+                </div>
+              </td>
+
+              <td
+                class="px-4 py-2 border-b border-gray-200 whitespace-nowrap"
+              >
+                <Input
+                  v-if="options.editItemIncome.edit && options.editItemIncome.id === item.id"
+                  v-model="dataEditIncome.observation"
+                />
+                <div v-else class="text-sm leading-5 text-gray-900">
+                  {{ item.observation }}
+                </div>
+              </td>
+
+              <td
+                class="px-4 py-2 text-sm font-medium leading-5 text-center border-b border-gray-200 whitespace-nowrap"
+              >
+                <button
+                  v-if="options.editItemIncome.edit && options.editItemIncome.id === item.id"
+                  class="px-2 py-1 text-gray-200 bg-blue-800 rounded-md hover:bg-blue-700 focus:outline-none focus:bg-blue-700 mr-2"
+                  title="Salvar alterações"
+                  @click="saveItemIncome(item)"
+                >
+                  <FontAwesomeIcon :icon="['far', 'save']" />
+                </button>
+                <button
+                  v-else
+                  class="px-2 py-1 text-gray-200 bg-green-800 rounded-md hover:bg-green-700 focus:outline-none focus:bg-green-700 mr-2"
+                  title="Editar registro"
+                  @click="editItemIncome(item)"
+                >
+                  <FontAwesomeIcon :icon="['far', 'pen-to-square']" />
+                </button>
+                <button
+                  v-if="options.editItemIncome.edit && options.editItemIncome.id === item.id"
+                  class="px-2 py-1 text-gray-200 bg-gray-800 rounded-md hover:bg-gray-700 focus:outline-none focus:bg-gray-700 mr-2"
+                  title="Cancelar edição"
+                  @click="options.editItemIncome.edit = false"
+                >
+                  <FontAwesomeIcon :icon="['fa', 'arrow-rotate-left']" />
+                </button>
+                <button
+                  class="px-2 py-1 text-gray-200 bg-red-800 rounded-md hover:bg-red-700 focus:outline-none focus:bg-red-700"
+                  title="Remover registro"
+                  @click="onDelete(item)"
+                >
+                  <FontAwesomeIcon :icon="['far', 'trash-can']" />
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </template>
+      <template #footer>
+        <div class="flex flex-row-reverse">
+          <button
+            class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+            @click="closeModal"
+          >
+            Fechar
+          </button>
+        </div>
+      </template>
+    </Modal>
   </div>
 </template>
 
 <style>
-.modal {
-  transition: opacity 0.25s ease;
+.dp__action_select {
+  --dp-primary-text-color: #212121;
 }
 </style>

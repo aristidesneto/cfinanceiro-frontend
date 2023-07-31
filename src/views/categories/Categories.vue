@@ -341,6 +341,7 @@ function normalizeType(type) {
         </div>
       </div>
 
+      <!-- Table -->
       <div class="my-6 overflow-hidden bg-white rounded-md shadow">
         <table class="w-full text-left border-collapse">
           <thead class="border-b">
