@@ -13,4 +13,9 @@ function formatDate(date: string) {
   return [day, month, year].join('/')
 }
 
-export { formatReal, formatDate }
+function monthExtension(month: number) {
+  const months = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
+  return months[month]
+}
+
+export { formatReal, formatDate, monthExtension }

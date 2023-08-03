@@ -1,5 +1,5 @@
 import { alertSuccess } from '../../../config/alert'
-import { normalizeCategories } from '../../../utils/categories'
+// import { categoriesToSelect } from '../../../utils/categories'
 import { api } from '../../../config/api'
 
 export default {
@@ -7,9 +7,9 @@ export default {
     const res = await api.get('categories', {
       params: payload,
     })
-    commit('CATEGORIES_SET', res.data)
+    commit('CATEGORIES_SET', res.data.data)
     commit('CATEGORIES_SET_PAGINATE', res.data.meta)
-    commit('CATEGORIES_SET_SELECT', normalizeCategories(res.data))
+    // commit('CATEGORIES_SET_SELECT', categoriesToSelect(res.data))
   },
   async createCategory({ commit }, { payload }) {
     await api.post('categories', payload)

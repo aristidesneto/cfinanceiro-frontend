@@ -34,4 +34,8 @@ export default {
     })
     commit('ENTRIES_SET_EXPENSE', res.data)
   },
+  async createExpense({ commit }, { payload }) {
+    await api.post('entries', payload)
+      .then(res => alertSuccess(res))
+  },
 }

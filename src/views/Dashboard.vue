@@ -19,10 +19,18 @@ const dataIncome: Incomes = {
 const income = ref<Incomes[]>([...Array(10).keys()].map(() => dataIncome))
 const entries = ref({})
 
-// onMounted(() => {
-//   store.dispatch('users')
-//     .then(response => entries.value = response.data.data)
-// })
+function getCategories() {
+  const payload = {
+    // type: props.search,
+    status: 1,
+    paginate: 0,
+  }
+  store.dispatch('categories', { payload })
+}
+
+onMounted(() => {
+  getCategories()
+})
 </script>
 
 <template>

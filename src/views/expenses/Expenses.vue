@@ -1,60 +1,89 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useStore } from 'vuex'
-import { formatReal, formatDate } from '../../utils/functions'
+import { Toggle, Input, Select, Tab, Tabs } from 'flowbite-vue'
+// import { vMaska } from 'maska'
+import GeneralExpense from '@/components/expenses/GeneralExpenseComponent.vue'
+import CreditCardExpenseComponent from '@/components/expenses/CreditCardExpenseComponent.vue'
+import FormCreate from '@/components/expenses/FormCreate.vue'
+// import CategorySelect from '@/composables/forms/CategorySelect.vue'
+import { monthExtension } from '@/utils/functions'
+// import { categoriesToSelect } from '@/utils/categories'
 
 const store = useStore()
 
-interface User {
-  username: string
-  email: string
-  password: string
-  confirm: string
-}
 
-const user = ref<User>({
-  username: '',
-  email: '',
-  password: '',
-  confirm: '',
-})
+// interface IExpense {
+//   title: string
+//   is_recurring: boolean
+//   start_date: string
+//   due_date: string
+//   category_id: string
+//   credit_card_id: string
+//   payment: string
+//   parcel: number
+//   amount: number
+//   observation: string
+// }
 
-interface Expenses {
-  name: string
-  category: string
-  due_date: string
-  value: string
-  observation: string
-}
+// const optionsMaska = {
+//   preProcess: value => value.replace(/[$,]/g, ''),
+//   postProcess: value => {
+//     value = value.replace('.', '').replace(',', '').replace(/\D/g, '')
+//     const options = { minimumFractionDigits: 2 }
+//     const result = new Intl.NumberFormat('pt-BR', options)
+//       .format(Number.parseFloat(value) / 100)
+//     return `R$ ${result}`
+//   },
+// }
 
-const entries = computed(() => store.getters.entries_expense)
+// const categories = computed(() => categoriesToSelect(store.state.categories.categories, 'expense'))
 
-const expenses: Expenses = {
-  name: 'Apartamento',
-  category: 'Habitação',
-  due_date: '20/05/2023',
-  value: 'R$ 345,55',
-  observation: 'Débito automático',
-}
+// const creditCards = computed(() => {
+//   const cards = store.getters.credit_cards
+//   const cards_select = []
+//   Object.values(cards).forEach((item) => {
+//     return cards_select.push({ name: item.name, value: item.id })
+//   })
+//   return cards_select
+// })
+// const paymentType = ref([
+//   { name: 'Cartão de crédito', value: 'credit-card' },
+//   { name: 'Cartão de débito', value: 'debit-card' },
+//   { name: 'Dinheiro', value: 'money' },
+// ])
+const activeTab = ref('first')
+const now = new Date()
+// const dataExpense = ref<IExpense>({
+//   title: '',
+//   is_recurring: false,
+//   start_date: '',
+//   due_date: '',
+//   category_id: '',
+//   credit_card_id: '',
+//   payment: '',
+//   parcel: 1,
+//   amount: 0,
+//   observation: '',
+// })
 
-const ListExpenses = ref<Expenses[]>([...Array(10).keys()].map(() => expenses))
-
-function register() {
-  const data = JSON.parse(JSON.stringify(user.value))
-  // eslint-disable-next-line no-console
-  console.log('Registered: ', data)
-}
+// function calculateRecurring() {
+//   if (dataExpense.value.payment === 'credit-card') {
+//     dataExpense.value.is_recurring = false
+//     return true
+//   }
+//   return false
+// }
 
 onMounted(() => {
-  getIncomes()
+  getExpenses()
+  // getCreditCards()
 })
 
-const startDate = new Date()
-
 // Functions
-function getIncomes() {
-  const year = startDate.getFullYear()
-  const month = String(startDate.getMonth() + 1).padStart(2, '0')
+function getExpenses() {
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
   const last_day = new Date(year, Number(month), 0).getDate()
   const params = {
     type: 'expense',
@@ -64,174 +93,61 @@ function getIncomes() {
   }
   store.dispatch('expenses', { params })
 }
+
+// function getCreditCards() {
+//   const params = {}
+//   store.dispatch('creditCards', { params })
+// }
+
+// async function onCreate() {
+//   const payload = {
+//     type: 'expense',
+//     title: dataExpense.value.title,
+//     is_recurring: dataExpense.value.is_recurring,
+//     start_date: dataExpense.value.start_date,
+//     due_date: dataExpense.value.due_date,
+//     category_id: dataExpense.value.category_id,
+//     credit_card_id: dataExpense.value.credit_card_id,
+//     parcel: dataExpense.value.parcel,
+//     amount: dataExpense.value.amount,
+//     observation: dataExpense.value.observation,
+//   }
+//   await store.dispatch('createExpense', { payload })
+//   getExpenses()
+// }
 </script>
 
 <template>
   <div>
     <div class="flex">
-      <h3 class="text-3xl font-semibold text-gray-700">
-        Despesas Julho/2023 - R$ 3.456,98
-      </h3>
-    </div>
-
-    <div class="mt-8">
-      <div class="mt-4">
-        <div class="p-6 bg-white rounded-md shadow-md">
-          <h2 class="text-lg font-semibold text-gray-700 capitalize">
-            Cadastrar despesas
-          </h2>
-
-          <form @submit.prevent="register">
-            <div class="grid grid-cols-1 gap-6 mt-4 sm:grid-cols-3">
-              <div>
-                <label class="text-gray-700" for="username">Despesa</label>
-                <input
-                  v-model="user.username"
-                  class="w-full mt-2 border-gray-200 rounded-md focus:border-indigo-600 focus:ring focus:ring-opacity-40 focus:ring-indigo-500"
-                  type="text"
-                >
-              </div>
-
-              <div>
-                <label class="text-gray-700" for="emailAddress">Categoria</label>
-                <input
-                  v-model="user.email"
-                  class="w-full mt-2 border-gray-200 rounded-md focus:border-indigo-600 focus:ring focus:ring-opacity-40 focus:ring-indigo-500"
-                  type="email"
-                >
-              </div>
-
-              <div>
-                <label class="text-gray-700" for="password">Data vencimento</label>
-                <input
-                  v-model="user.password"
-                  class="w-full mt-2 border-gray-200 rounded-md focus:border-indigo-600 focus:ring focus:ring-opacity-40 focus:ring-indigo-500"
-                  type="password"
-                >
-              </div>
-
-              <div>
-                <label class="text-gray-700" for="passwordConfirmation">Valor</label>
-                <input
-                  v-model="user.confirm"
-                  class="w-full mt-2 border-gray-200 rounded-md focus:border-indigo-600 focus:ring focus:ring-opacity-40 focus:ring-indigo-500"
-                  type="password"
-                >
-              </div>
-
-              <div>
-                <label class="text-gray-700" for="passwordConfirmation">Observação</label>
-                <input
-                  v-model="user.confirm"
-                  class="w-full mt-2 border-gray-200 rounded-md focus:border-indigo-600 focus:ring focus:ring-opacity-40 focus:ring-indigo-500"
-                  type="password"
-                >
-              </div>
-            </div>
-
-            <div class="flex justify-end mt-4">
-              <button
-                class="px-4 py-2 text-gray-200 bg-gray-800 rounded-md hover:bg-gray-700 focus:outline-none focus:bg-gray-700"
-              >
-                Cadastrar
-              </button>
-            </div>
-          </form>
-        </div>
+      <div class="flex-1">
+        <h3 class="text-3xl font-semibold text-gray-700">
+          Despesas {{ monthExtension(now.getMonth()) }}/{{ now.getFullYear() }}
+        </h3>
+      </div>
+      <div class="flex-1 text-right">
+        <button
+          @click="openModal"
+          class="px-4 py-2 text-gray-200 bg-gray-800 rounded-md hover:bg-gray-700 focus:outline-none focus:bg-gray-700"
+        >
+          <FontAwesomeIcon :icon="['far', 'trash-can']" /> Adicionar
+        </button>
       </div>
     </div>
 
-    <div class="flex flex-col mt-8">
-      <div class="py-2 -my-2 overflow-x-auto sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
-        <div
-          class="inline-block min-w-full overflow-hidden align-middle border-b border-gray-200 shadow sm:rounded-lg"
-        >
-          <table class="min-w-full">
-            <thead>
-              <tr>
-                <th
-                  class="px-6 py-3 text-xs font-medium leading-4 tracking-wider text-left text-gray-500 uppercase border-b border-gray-200 bg-gray-50"
-                >
-                  Despesa
-                </th>
-                <th
-                  class="px-6 py-3 text-xs font-medium leading-4 tracking-wider text-left text-gray-500 uppercase border-b border-gray-200 bg-gray-50"
-                >
-                  Categoria
-                </th>
-                <th
-                  class="px-6 py-3 text-xs font-medium leading-4 tracking-wider text-left text-gray-500 uppercase border-b border-gray-200 bg-gray-50"
-                >
-                  Vencimento
-                </th>
-                <th
-                  class="px-6 py-3 text-xs font-medium leading-4 tracking-wider text-left text-gray-500 uppercase border-b border-gray-200 bg-gray-50"
-                >
-                  Valor
-                </th>
-                <th
-                  class="px-6 py-3 text-xs font-medium leading-4 tracking-wider text-left text-gray-500 uppercase border-b border-gray-200 bg-gray-50"
-                >
-                  Observação
-                </th>
-                <th class="px-6 py-3 border-b border-gray-200 bg-gray-50" />
-              </tr>
-            </thead>
+    <!-- <FormCreate /> -->
 
-            <tbody class="bg-white">
-              <tr v-for="(item, index) in entries" :key="index">
-                <td
-                  class="px-6 py-4 border-b border-gray-200 whitespace-nowrap"
-                >
-                  <div class="flex items-center">
-                    <div class="text-sm font-medium leading-5 text-gray-900">
-                      {{ item.title }}
-                    </div>
-                  </div>
-                </td>
-
-                <td
-                  class="px-6 py-4 border-b border-gray-200 whitespace-nowrap"
-                >
-                  <div class="text-sm leading-5 text-gray-900">
-                    {{ item.category.name }}
-                  </div>
-                </td>
-
-                <td
-                  class="px-6 py-4 border-b border-gray-200 whitespace-nowrap"
-                >
-                  <div class="text-sm leading-5 text-gray-900">
-                    {{ item.due_date }}
-                  </div>
-                </td>
-
-                <td
-                  class="px-6 py-4 border-b border-gray-200 whitespace-nowrap"
-                >
-                  <div class="text-sm leading-5 text-gray-900">
-                    {{ formatReal(item.amount) }}
-                  </div>
-                </td>
-
-                <td
-                  class="px-6 py-4 border-b border-gray-200 whitespace-nowrap"
-                >
-                  <div class="text-sm leading-5 text-gray-900">
-                    {{ item.observation }}
-                  </div>
-                </td>
-
-                <td
-                  class="px-6 py-4 text-sm font-medium leading-5 text-right border-b border-gray-200 whitespace-nowrap"
-                >
-                  <a href="#" class="text-indigo-600 hover:text-indigo-900 mr-2">Editar</a>
-                  <a href="#" class="text-indigo-600 hover:text-indigo-900 mr-2">Detalhes</a>
-                  <a href="#" class="text-indigo-600 hover:text-indigo-900">Remover</a>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+    <div class="mt-8">
+      <div class="mt-4">
+        <div class="p-2 bg-white rounded-md shadow-md">
+          <Tabs v-model="activeTab" variant="underline" class="pt-5">
+            <Tab name="first" title="Despesas Gerais">
+              <GeneralExpense />
+            </Tab>
+            <Tab name="second" title="Despesas Cartão de Crédito">
+              <CreditCardExpenseComponent />
+            </Tab>
+          </Tabs>
         </div>
       </div>
     </div>

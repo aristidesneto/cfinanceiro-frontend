@@ -35,11 +35,11 @@ export default [
         name: 'Incomes',
         component: Incomes,
       },
-      {
-        path: '/categories',
-        name: 'Categories',
-        component: Categories,
-      },
+      // {
+      //   path: '/categories',
+      //   name: 'Categories',
+      //   component: Categories,
+      // },
       {
         path: '/account',
         name: 'Account',

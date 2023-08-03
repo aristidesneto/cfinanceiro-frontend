@@ -5,7 +5,7 @@ import { alertConfirmed } from '../../config/alert'
 
 const store = useStore()
 
-interface FormData {
+interface IFormData {
   id: number
   name: string
   type: string
@@ -13,7 +13,7 @@ interface FormData {
   status: boolean
 }
 
-const dataCategory = reactive<FormData>({
+const dataCategory = reactive<IFormData>({
   id: 0,
   name: '',
   type: 'income',
@@ -45,7 +45,10 @@ const options = ref({
 })
 
 const categories = computed(() => store.getters.categories_income)
+// const categories2 = computed(() => store.state.categories.data_categories)
 const meta = computed(() => store.getters.categories_meta_income)
+
+// console.log(categories2)
 
 onMounted(() => {
   getCategories()
@@ -111,7 +114,7 @@ function openCreate() {
   dataCategory.color = '#d91212'
 }
 
-function onEdit(item: FormData) {
+function onEdit(item: IFormData) {
   options.value.modal.title = 'Editar'
   options.value.modal.showCheckbox = true
   options.value.open = true

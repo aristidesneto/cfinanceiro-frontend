@@ -2,9 +2,11 @@
 import { computed, onMounted, ref } from 'vue'
 import { useStore } from 'vuex'
 import { Input, Modal, Select } from 'flowbite-vue'
-import { vMaska } from "maska"
-import { formatReal } from '../../utils/functions'
-import { alertConfirmed } from '../../config/alert'
+import { vMaska } from 'maska'
+import { formatReal } from '@/utils/functions'
+import { alertConfirmed } from '@/config/alert'
+import CategorySelect from '@/composables/forms/CategorySelect.vue'
+import { categoriesToSelect } from '@/utils/categories'
 
 const store = useStore()
 
@@ -61,11 +63,11 @@ const options = ref({
 const entries = computed(() => store.getters.entries_incomes)
 const group_income = computed(() => store.getters.entries_group_income)
 const detailed_month = ref()
-const categories = computed(() => store.getters.categories_select)
+// const categories = computed(() => store.getters.categories_select)
+const categories = computed(() => categoriesToSelect(store.state.categories.categories))
 
 onMounted(() => {
   getIncomes()
-  getCategories()
 })
 
 // Functions
@@ -79,13 +81,13 @@ async function getIncomes() {
   await store.dispatch('incomes', { params })
 }
 
-function getCategories() {
-  const payload = {
-    type: 'income',
-    status: 1,
-  }
-  store.dispatch('categories', { payload })
-}
+// function getCategories() {
+//   const payload = {
+//     type: 'income',
+//     status: 1,
+//   }
+//   store.dispatch('categories', { payload })
+// }
 
 function closeModal() {
   options.value.isShowModal = false
@@ -197,10 +199,9 @@ async function openEdit(month: string) {
                 </div>
 
                 <div>
-                  <Select
+                  <CategorySelect
                     v-model="dataIncome.category_id"
-                    :options="categories"
-                    label="Categorias"
+                    :items="categories"
                   />
                 </div>
 
@@ -229,6 +230,7 @@ async function openEdit(month: string) {
                 </button>
               </div>
             </form>
+            {{ dataIncome }}
           </div>
         </div>
         <!-- Column 2 -->
