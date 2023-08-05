@@ -2,7 +2,6 @@
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useStore } from 'vuex'
-import { api, route_web } from '../../config/api'
 
 const router = useRouter()
 const store = useStore()

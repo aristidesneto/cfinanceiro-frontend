@@ -6,7 +6,7 @@ export default {
   // Income
   async incomes({ commit }, { params }) {
     const res = await api.get('entries', {
-      params
+      params,
     })
     commit('ENTRIES_SET_INCOME', res.data)
     commit('ENTRIES_SET_GROUP_INCOME', groupByIncome(res.data.data))
@@ -30,7 +30,7 @@ export default {
   // Expenses
   async expenses({ commit }, { params }) {
     const res = await api.get('entries', {
-      params
+      params,
     })
     commit('ENTRIES_SET_EXPENSE', res.data)
   },

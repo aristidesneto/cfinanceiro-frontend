@@ -1,5 +1,6 @@
 import axios from 'axios'
 
+// const base_url = 'http://fcontrol-api.homelab.com'
 const base_url = 'http://localhost:8888'
 
 const api = axios.create({

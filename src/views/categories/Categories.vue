@@ -148,10 +148,18 @@ function normalizeType(type) {
               class="block w-full h-full px-4 py-2 pr-8 leading-tight text-gray-700 bg-white border border-gray-400 rounded-l appearance-none focus:outline-none focus:bg-white focus:border-gray-500"
               @change="getCategories"
             >
-              <option value="5">5</option>
-              <option value="10">10</option>
-              <option value="20">20</option>
-              <option value="50">50</option>
+              <option value="5">
+                5
+              </option>
+              <option value="10">
+                10
+              </option>
+              <option value="20">
+                20
+              </option>
+              <option value="50">
+                50
+              </option>
             </select>
 
             <div
@@ -175,9 +183,15 @@ function normalizeType(type) {
               class="block w-full h-full px-4 py-2 pr-8 leading-tight text-gray-700 bg-white border-t border-b border-r border-gray-400 rounded-r appearance-none sm:rounded-r-none sm:border-r-0 focus:outline-none focus:border-l focus:border-r focus:bg-white focus:border-gray-500"
               @change="getCategories"
             >
-              <option value="all">Todos</option>
-              <option value="1">Ativo</option>
-              <option value="0">Inativo</option>
+              <option value="all">
+                Todos
+              </option>
+              <option value="1">
+                Ativo
+              </option>
+              <option value="0">
+                Inativo
+              </option>
             </select>
 
             <div
@@ -201,9 +215,15 @@ function normalizeType(type) {
               class="block w-full h-full px-4 py-2 pr-8 leading-tight text-gray-700 bg-white border-t border-b border-r border-gray-400 rounded-r appearance-none sm:rounded-r-none sm:border-r-0 focus:outline-none focus:border-l focus:border-r focus:bg-white focus:border-gray-500"
               @change="getCategories"
             >
-              <option value="all">Todos</option>
-              <option value="income">Receita</option>
-              <option value="expense">Despesa</option>
+              <option value="all">
+                Todos
+              </option>
+              <option value="income">
+                Receita
+              </option>
+              <option value="expense">
+                Despesa
+              </option>
             </select>
 
             <div
@@ -381,7 +401,7 @@ function normalizeType(type) {
             >
               <td class="px-6 py-4 text-gray-700 border-b">
                 <div
-                  :style="{ background: item.color, fontSize: '10px', display: 'block', width: '25px', height: '25px' }" 
+                  :style="{ background: item.color, fontSize: '10px', display: 'block', width: '25px', height: '25px' }"
                   :title="item.color"
                 />
               </td>

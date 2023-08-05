@@ -12,7 +12,7 @@ const store = useStore()
 
 const optionsMaska = {
   preProcess: value => value.replace(/[$,]/g, ''),
-  postProcess: value => {
+  postProcess: (value) => {
     value = value.replace('.', '').replace(',', '').replace(/\D/g, '')
     const options = { minimumFractionDigits: 2 }
     const result = new Intl.NumberFormat('pt-BR', options)
@@ -25,8 +25,8 @@ interface FormData {
   is_recurring: number
   start_date: object
   category_id: string
-  amount: number
-  amount_sum: number
+  amount: string | number
+  amount_sum: string | number
   observation: string
 }
 
@@ -94,7 +94,7 @@ function closeModal() {
   options.value.editItemIncome.edit = false
 }
 
-function getDetailMonth(month: string) {
+function getDetailMonth(month: number) {
   return Object.values(entries.value).filter((item) => {
     return item.month_extension === month
   })
@@ -166,7 +166,7 @@ async function onDelete(item) {
   })
 }
 
-async function openEdit(month: string) {
+async function openEdit(month: number) {
   options.value.isShowModal = true
   detailed_month.value = getDetailMonth(month)
 }

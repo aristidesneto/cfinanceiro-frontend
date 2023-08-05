@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useStore } from 'vuex'
-import { Toggle, Input, Select, Modal, Tab, Tabs } from 'flowbite-vue'
+import { Input, Modal, Select, Tab, Tabs, Toggle } from 'flowbite-vue'
 import { vMaska } from 'maska'
 import GeneralExpense from '@/components/expenses/GeneralExpenseComponent.vue'
 import CreditCardExpenseComponent from '@/components/expenses/CreditCardExpenseComponent.vue'
@@ -97,7 +97,7 @@ function getCategories() {
 
 const optionsMaska = {
   preProcess: value => value.replace(/[$,]/g, ''),
-  postProcess: value => {
+  postProcess: (value) => {
     value = value.replace('.', '').replace(',', '').replace(/\D/g, '')
     const options = { minimumFractionDigits: 2 }
     const result = new Intl.NumberFormat('pt-BR', options)
@@ -152,8 +152,8 @@ async function onCreate() {
       </div>
       <div class="flex-1 text-right">
         <button
-          @click="openModal"
           class="px-4 py-2 text-blue-200 bg-blue-800 rounded-md hover:bg-blue-700 focus:outline-none focus:bg-blue-700"
+          @click="openModal"
         >
           <FontAwesomeIcon :icon="['fas', 'circle-plus']" /> Adicionar
         </button>
