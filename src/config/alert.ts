@@ -2,14 +2,15 @@ import Swal from 'sweetalert2'
 
 export function alertSuccess(data: any) {
   Swal.fire({
-    title: data.data.message,
+    title: data,
     icon: 'success',
   })
 }
 
 export function alertError(data: any) {
   Swal.fire({
-    title: data.data.message,
+    title: data.title,
+    html: data.text,
     icon: 'error',
   })
 }

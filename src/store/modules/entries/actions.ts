@@ -17,15 +17,15 @@ export default {
   },
   async createIncome({ commit }, { payload }) {
     await api.post('entries', payload)
-      .then(res => alertSuccess(res))
+      .then(res => alertSuccess(res.data.message))
   },
   async updateIncome({ commit }, { id, payload }) {
     await api.put(`entries/${id}`, payload)
-      .then(res => alertSuccess(res))
+      .then(res => alertSuccess(res.data.message))
   },
   async removeIncome({ commit }, { id }) {
     await api.delete(`entries/${id}`)
-      .then(res => alertSuccess(res))
+      .then(res => alertSuccess(res.data.message))
   },
   // Expenses
   async expenses({ commit }, { params }) {
@@ -36,6 +36,6 @@ export default {
   },
   async createExpense({ commit }, { payload }) {
     await api.post('entries', payload)
-      .then(res => alertSuccess(res))
+      .then(res => alertSuccess(res.data.message))
   },
 }

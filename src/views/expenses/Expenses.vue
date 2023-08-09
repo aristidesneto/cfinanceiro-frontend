@@ -132,7 +132,7 @@ async function onCreate() {
     start_date: dataExpense.value.start_date,
     due_date: dataExpense.value.due_date,
     category_id: dataExpense.value.category_id,
-    credit_card_id: dataExpense.value.credit_card_id,
+    credit_card_id: dataExpense.value.credit_card_id === '' ? null : dataExpense.value.credit_card_id,
     parcel: dataExpense.value.parcel,
     amount: dataExpense.value.amount,
     observation: dataExpense.value.observation,

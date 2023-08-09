@@ -1,4 +1,5 @@
 import axios from 'axios'
+import handleErrors from './handleErrors'
 
 // const base_url = 'http://fcontrol-api.homelab.com'
 const base_url = 'http://localhost:8888'
@@ -9,9 +10,20 @@ const api = axios.create({
   headers: {
     'Content-type': 'application/json',
     'Accept': 'application/json',
-    // 'X-Requested-With': 'XMLHttpRequest',
-    // 'Access-Control-Allow-Origin': '*',
   },
+})
+
+api.interceptors.request.use((config) => {
+  return config
+}, (error) => {
+  return Promise.reject(error)
+})
+
+api.interceptors.response.use((response) => {
+  return response
+}, (error) => {
+  handleErrors(error.response)
+  return Promise.reject(error)
 })
 
 const route_web = axios.create({

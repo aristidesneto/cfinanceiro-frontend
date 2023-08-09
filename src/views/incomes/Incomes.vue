@@ -11,8 +11,8 @@ import { categoriesToSelect } from '@/utils/categories'
 const store = useStore()
 
 const optionsMaska = {
-  preProcess: value => value.replace(/[$,]/g, ''),
-  postProcess: (value) => {
+  preProcess: (value: string) => value.replace(/[$,]/g, ''),
+  postProcess: (value: string) => {
     value = value.replace('.', '').replace(',', '').replace(/\D/g, '')
     const options = { minimumFractionDigits: 2 }
     const result = new Intl.NumberFormat('pt-BR', options)
@@ -60,14 +60,15 @@ const options = ref({
   },
 })
 
+const loadingButton = ref(false)
 const entries = computed(() => store.getters.entries_incomes)
 const group_income = computed(() => store.getters.entries_group_income)
 const detailed_month = ref()
-// const categories = computed(() => store.getters.categories_select)
 const categories = computed(() => categoriesToSelect(store.state.categories.categories))
 
 onMounted(() => {
   getIncomes()
+  getCategories()
 })
 
 // Functions
@@ -81,13 +82,13 @@ async function getIncomes() {
   await store.dispatch('incomes', { params })
 }
 
-// function getCategories() {
-//   const payload = {
-//     type: 'income',
-//     status: 1,
-//   }
-//   store.dispatch('categories', { payload })
-// }
+function getCategories() {
+  const payload = {
+    type: 'income',
+    status: 1,
+  }
+  store.dispatch('categories', { payload })
+}
 
 function closeModal() {
   options.value.isShowModal = false
@@ -100,7 +101,7 @@ function getDetailMonth(month: number) {
   })
 }
 
-function editItemIncome(item) {
+function editItemIncome(item: { id: number; start_date_month: number; start_date_year: any; category: { id: string }; amount: string; observation: string }) {
   options.value.editItemIncome.edit = true
   options.value.editItemIncome.id = item.id
   dataEditIncome.value.start_date = {
@@ -112,7 +113,7 @@ function editItemIncome(item) {
   dataEditIncome.value.observation = item.observation
 }
 
-async function saveItemIncome(item) {
+async function saveItemIncome(item: { id: any; month_extension: number }) {
   options.value.editItemIncome.edit = false
   const payload = {
     start_date: {
@@ -130,6 +131,7 @@ async function saveItemIncome(item) {
 }
 
 async function onCreate() {
+  loadingButton.value = true
   const payload = {
     type: 'income',
     is_recurring: dataIncome.value.is_recurring,
@@ -148,15 +150,16 @@ async function onCreate() {
     year: now.getFullYear(),
   }
   dataIncome.value.amount = 0
+  loadingButton.value = false
 }
 
-async function onDelete(item) {
+async function onDelete(item: { id: any; month_extension: number }) {
   alertConfirmed({
     title: 'Deseja remover esse registro?',
     confirmButtonText: 'Sim, remover',
     confirmButtonColor: 'red',
     cancelButtonText: 'Cancelar',
-  }).then(async (res) => {
+  }).then(async (res: { isConfirmed: any }) => {
     if (res.isConfirmed) {
       const id = item.id
       await store.dispatch('removeIncome', { id })
@@ -226,7 +229,13 @@ async function openEdit(month: number) {
                   type="submit"
                   class="px-4 py-2 text-green-200 bg-green-800 rounded-md hover:bg-green-700 focus:outline-none focus:bg-green-700"
                 >
-                  <FontAwesomeIcon :icon="['far', 'floppy-disk']" class="mr-2" /> Cadastrar
+                  <span v-if="loadingButton">
+                    <FontAwesomeIcon icon="fa-solid fa-circle-notch" spin class="mr-2" />
+                  </span>
+                  <span v-else>
+                    <FontAwesomeIcon icon="fa fa-floppy-disk" class="mr-2" />
+                  </span>
+                  Cadastrar
                 </button>
               </div>
             </form>
