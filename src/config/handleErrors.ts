@@ -5,7 +5,7 @@ function buildArrayError(error: any) {
 
   if (error.data.errors) {
     Object.values(error.data.errors).forEach((item) => {
-      html += `<p>* ${item}</p>`
+      html += `<p>${item}</p>`
     })
 
     return html
@@ -29,7 +29,7 @@ export default function (error: any) {
       break
 
     case 419:
-      text = 'Sua sessão expirou. Faça login novamente para continuar.'
+      text = 'Sua sessão expirou. Faça login novamente para continuar'
       break
 
     case 422:

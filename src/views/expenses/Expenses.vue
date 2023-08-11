@@ -8,6 +8,7 @@ import CreditCardExpenseComponent from '@/components/expenses/CreditCardExpenseC
 import CategorySelect from '@/composables/forms/CategorySelect.vue'
 import { monthExtension } from '@/utils/functions'
 import { categoriesToSelect } from '@/utils/categories'
+import useCategoryApi from '@/composables/apis/useCategories.js'
 
 const store = useStore()
 
@@ -53,7 +54,8 @@ const options = ref({
 })
 
 // computed
-const categories = computed(() => categoriesToSelect(store.state.categories.categories, 'expense'))
+// const categories = computed(() => categoriesToSelect(store.state.categories.categories, 'expense'))
+const categories = ref([])
 
 const creditCards = computed(() => {
   const cards_select = []
@@ -87,12 +89,15 @@ function calculateRecurring() {
   return false
 }
 
-function getCategories() {
+async function getCategories() {
   const payload = {
+    type: 'expense',
     status: 1,
     paginate: 0,
   }
-  store.dispatch('categories', { payload })
+  const { list } = useCategoryApi()
+  const { data } = await list(payload)
+  categories.value = categoriesToSelect(data.data, 'expense')
 }
 
 const optionsMaska = {
@@ -291,6 +296,7 @@ async function onCreate() {
             </div>
           </div>
         </form>
+        {{ dataExpense }}
       </template>
     </Modal>
   </div>

@@ -9,6 +9,7 @@ const store = useStore()
 interface FormData {
   email: string
   password: string
+  remember: boolean
 }
 
 interface Message {
@@ -20,8 +21,9 @@ const isDisabled = ref(false)
 const btnText = 'Entrar'
 
 const dataLogin = ref<FormData>({
-  email: 'aristides@admin.com',
+  email: 'aristidesbneto@gmail.com',
   password: 'password',
+  remember: false,
 })
 
 const message = ref<Message>({
@@ -41,7 +43,7 @@ function loading() {
 
 onMounted(() => {
   store.dispatch('me')
-    .then(() => router.push('dashboard'))
+    .then(() => router.replace('dashboard'))
 })
 
 function login() {
@@ -55,6 +57,7 @@ function login() {
   const payload = {
     email: dataLogin.value.email,
     password: dataLogin.value.password,
+    remember: dataLogin.value.remember,
   }
 
   store.dispatch('onLogin', { payload })
@@ -120,7 +123,10 @@ function login() {
         <div class="flex items-center justify-between mt-4">
           <div>
             <label class="inline-flex items-center">
-              <input type="checkbox" class="text-indigo-600 border-gray-200 rounded-md focus:border-indigo-600 focus:ring focus:ring-opacity-40 focus:ring-indigo-500">
+              <input
+                v-model="dataLogin.remember"
+                type="checkbox"
+                class="text-indigo-600 border-gray-200 rounded-md focus:border-indigo-600 focus:ring focus:ring-opacity-40 focus:ring-indigo-500">
               <span class="mx-2 text-sm text-gray-600">Lembrar senha</span>
             </label>
           </div>

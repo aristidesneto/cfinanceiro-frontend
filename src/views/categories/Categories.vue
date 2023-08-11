@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
-import { useStore } from 'vuex'
-import { alertConfirmed } from '../../config/alert'
-
-const store = useStore()
+import { onMounted, reactive, ref } from 'vue'
+import { Select } from 'flowbite-vue'
+import { alertConfirmed } from '@/config/alert'
+import useCategoryApi from '@/composables/apis/useCategories'
 
 interface IFormData {
   id: number
@@ -26,6 +25,22 @@ const data = {
     income: 'Receita',
     expense: 'Despesa',
   },
+  paginate: [
+    { value: 5, name: '5' },
+    { value: 10, name: '10' },
+    { value: 15, name: '15' },
+    { value: 20, name: '20' },
+  ],
+  filter: [
+    { value: 'all', name: 'Todos' },
+    { value: '1', name: 'Ativo' },
+    { value: '0', name: 'Inativo' },
+  ],
+  types: [
+    { value: 'all', name: 'Todos' },
+    { value: 'income', name: 'Receita' },
+    { value: 'expense', name: 'Despesa' },
+  ],
 }
 
 const options = ref({
@@ -42,39 +57,51 @@ const options = ref({
     showCheckbox: false,
   },
   open: false,
+  is_loading: false,
 })
 
-const categories = computed(() => store.getters.categories_income)
-// const categories2 = computed(() => store.state.categories.data_categories)
-const meta = computed(() => store.getters.categories_meta_income)
-
-// console.log(categories2)
+const categories_data = ref([])
+const categories_meta = ref([])
 
 onMounted(() => {
   getCategories()
 })
 
+function isLoading() {
+  options.value.is_loading = !options.value.is_loading
+}
+
 // Functions
-function getCategories(current_page = 1) {
+async function getCategories(current_page = 1) {
   const payload = {
     type: options.value.filter.type,
     status: options.value.filter.status,
     total_page: options.value.paginate.total_page,
     page: current_page,
   }
-  store.dispatch('categories', { payload })
+  const { list } = useCategoryApi()
+  const { data } = await list(payload)
+  categories_data.value = data.data
+  categories_meta.value = data.meta
 }
 
 async function onCreate() {
-  options.value.open = false
+  isLoading()
   const payload = {
     name: dataCategory.name,
     type: dataCategory.type,
     color: dataCategory.color,
     status: true,
   }
-  await store.dispatch('createCategory', { payload })
-  getCategories()
+  const { store } = useCategoryApi()
+  await store(payload)
+    .then(() => {
+      options.value.open = false
+      getCategories()
+    })
+    .catch(() => {
+      isLoading()
+    })
 }
 
 async function onUpdate() {
@@ -85,20 +112,21 @@ async function onUpdate() {
     color: dataCategory.color,
     status: dataCategory.status,
   }
-  const id = dataCategory.id
-  await store.dispatch('updateCategory', { id, payload })
+  const { update } = useCategoryApi()
+  await update(dataCategory.id, payload)
   getCategories()
 }
 
-function onDelete(id: number) {
+function onDelete(item: any) {
   alertConfirmed({
-    title: 'Deseja remover esse registro?',
+    title: `Deseja remover o item: ${item.name}?`,
     confirmButtonText: 'Sim, remover',
     confirmButtonColor: 'red',
     cancelButtonText: 'Cancelar',
-  }).then(async (res) => {
+  }).then(async (res: any) => {
     if (res.isConfirmed) {
-      await store.dispatch('deleteCategory', { id })
+      const { remove } = useCategoryApi()
+      await remove(item.id)
       getCategories()
     }
   })
@@ -125,10 +153,6 @@ function onEdit(item: IFormData) {
   dataCategory.color = item.color
   dataCategory.status = Boolean(item.status)
 }
-
-function normalizeType(type) {
-  return data.categoryType[type]
-}
 </script>
 
 <template>
@@ -142,131 +166,34 @@ function normalizeType(type) {
     <div class="mt-6">
       <div class="flex flex-col mt-3 sm:flex-row">
         <div class="flex">
-          <div class="relative">
-            <select
-              v-model="options.paginate.total_page"
-              class="block w-full h-full px-4 py-2 pr-8 leading-tight text-gray-700 bg-white border border-gray-400 rounded-l appearance-none focus:outline-none focus:bg-white focus:border-gray-500"
-              @change="getCategories"
-            >
-              <option value="5">
-                5
-              </option>
-              <option value="10">
-                10
-              </option>
-              <option value="20">
-                20
-              </option>
-              <option value="50">
-                50
-              </option>
-            </select>
-
-            <div
-              class="absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 pointer-events-none"
-            >
-              <svg
-                class="w-4 h-4 fill-current"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"
-                />
-              </svg>
-            </div>
-          </div>
-
-          <div class="relative">
-            <select
-              v-model="options.filter.status"
-              class="block w-full h-full px-4 py-2 pr-8 leading-tight text-gray-700 bg-white border-t border-b border-r border-gray-400 rounded-r appearance-none sm:rounded-r-none sm:border-r-0 focus:outline-none focus:border-l focus:border-r focus:bg-white focus:border-gray-500"
-              @change="getCategories"
-            >
-              <option value="all">
-                Todos
-              </option>
-              <option value="1">
-                Ativo
-              </option>
-              <option value="0">
-                Inativo
-              </option>
-            </select>
-
-            <div
-              class="absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 pointer-events-none"
-            >
-              <svg
-                class="w-4 h-4 fill-current"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"
-                />
-              </svg>
-            </div>
-          </div>
-
-          <div class="relative">
-            <select
-              v-model="options.filter.type"
-              class="block w-full h-full px-4 py-2 pr-8 leading-tight text-gray-700 bg-white border-t border-b border-r border-gray-400 rounded-r appearance-none sm:rounded-r-none sm:border-r-0 focus:outline-none focus:border-l focus:border-r focus:bg-white focus:border-gray-500"
-              @change="getCategories"
-            >
-              <option value="all">
-                Todos
-              </option>
-              <option value="income">
-                Receita
-              </option>
-              <option value="expense">
-                Despesa
-              </option>
-            </select>
-
-            <div
-              class="absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 pointer-events-none"
-            >
-              <svg
-                class="w-4 h-4 fill-current"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"
-                />
-              </svg>
-            </div>
-          </div>
+          <Select
+            v-model="options.paginate.total_page"
+            :options="data.paginate"
+            @change="getCategories"
+            label="Registros por página"
+          />
+          <Select
+            v-model="options.filter.status"
+            :options="data.filter"
+            @change="getCategories"
+            label="Status"
+          />
+          <Select
+            v-model="options.filter.type"
+            :options="data.types"
+            @change="getCategories"
+            label="Tipo"
+          />
         </div>
 
-        <div class="relative block mt-2 sm:mt-0">
-          <span class="absolute inset-y-0 left-0 flex items-center pl-2">
-            <svg
-              viewBox="0 0 24 24"
-              class="w-4 h-4 text-gray-500 fill-current"
-            >
-              <path
-                d="M10 4a6 6 0 100 12 6 6 0 000-12zm-8 6a8 8 0 1114.32 4.906l5.387 5.387a1 1 0 01-1.414 1.414l-5.387-5.387A8 8 0 012 10z"
-              />
-            </svg>
-          </span>
-
-          <input
-            placeholder="Search"
-            class="block w-full py-2 pl-8 pr-6 text-sm text-gray-700 placeholder-gray-400 bg-white border border-b border-gray-400 rounded-l rounded-r appearance-none sm:rounded-l-none focus:bg-white focus:placeholder-gray-600 focus:text-gray-700 focus:outline-none"
+        <div class="flex-1 text-right mt-7">
+          <button
+            class="px-4 py-2 text-blue-200 bg-blue-800 rounded-md hover:bg-blue-700 focus:outline-none focus:bg-blue-700"
+            @click="openCreate()"
           >
+            <FontAwesomeIcon :icon="['fas', 'circle-plus']" /> Adicionar
+          </button>
         </div>
-
-        <button
-          type="submit"
-          class="px-4 py-2 text-green-200 bg-green-800 rounded-md hover:bg-green-700 focus:outline-none focus:bg-green-700 ml-2"
-          @click="openCreate()"
-        >
-          <FontAwesomeIcon :icon="['far', 'square-plus']" class="mr-2" /> Cadastrar
-        </button>
       </div>
 
       <!-- modal -->
@@ -347,16 +274,22 @@ function normalizeType(type) {
               </button>
               <button
                 v-if="dataCategory.id > 0"
-                class="px-6 py-3 font-medium tracking-wide text-white bg-indigo-600 rounded-md hover:bg-indigo-500 focus:outline-none"
+                class="px-4 py-2 text-green-200 bg-green-800 rounded-md hover:bg-green-700 focus:outline-none focus:bg-green-700"
                 @click="onUpdate()"
               >
                 Atualizar
               </button>
               <button
                 v-else
-                class="px-6 py-3 font-medium tracking-wide text-white bg-indigo-600 rounded-md hover:bg-indigo-500 focus:outline-none"
+                class="px-4 py-2 text-green-200 bg-green-800 rounded-md hover:bg-green-700 focus:outline-none focus:bg-green-700"
                 @click="onCreate()"
               >
+                <span v-if="options.is_loading">
+                  <FontAwesomeIcon icon="fa-solid fa-circle-notch" spin class="mr-2" />
+                </span>
+                <span v-else>
+                  <FontAwesomeIcon icon="fa fa-floppy-disk" class="mr-2" />
+                </span>
                 Cadastrar
               </button>
             </div>
@@ -364,104 +297,124 @@ function normalizeType(type) {
         </div>
       </div>
 
-      <!-- Table -->
-      <div class="my-6 overflow-hidden bg-white rounded-md shadow">
-        <table class="w-full text-left border-collapse">
-          <thead class="border-b">
-            <tr>
-              <th
-                class="px-5 py-3 text-sm font-medium text-gray-100 uppercase bg-indigo-800 w-1"
-              />
-              <th
-                class="px-5 py-3 text-sm font-medium text-gray-100 uppercase bg-indigo-800"
-              >
-                Nome
-              </th>
-              <th
-                class="px-5 py-3 text-sm font-medium text-gray-100 uppercase bg-indigo-800"
-              >
-                Tipo
-              </th>
-              <th
-                class="px-5 py-3 text-sm font-medium text-gray-100 uppercase bg-indigo-800"
-              >
-                Status
-              </th>
-              <th
-                class="px-5 py-3 text-sm font-medium text-gray-100 uppercase bg-indigo-800 text-center"
-              >
-                Ação
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="(item, index) in categories.data" :key="index"
-              class="hover:bg-gray-200"
-            >
-              <td class="px-6 py-4 text-gray-700 border-b">
-                <div
-                  :style="{ background: item.color, fontSize: '10px', display: 'block', width: '25px', height: '25px' }"
-                  :title="item.color"
-                />
-              </td>
-              <td class="px-6 py-4 text-gray-700 border-b">
-                {{ item.name }}
-              </td>
-              <td class="px-6 py-4 text-gray-700 border-b">
-                {{ normalizeType(item.type) }}
-              </td>
-              <td class="px-6 py-4 text-gray-700 border-b">
-                <span
-                  class="inline-flex px-2 text-xs font-semibold leading-5 text-white rounded-full"
-                  :class="[item.status ? 'bg-green-600' : 'bg-red-400']"
-                >
-                  {{ item.status ? 'Ativo' : 'Inativo' }}
-                </span>
-              </td>
-              <td class="px-6 py-4 text-gray-500 border-b text-center">
-                <button
-                  class="px-3 py-1 text-sm text-white bg-indigo-600 rounded-md hover:bg-indigo-500 focus:outline-none mr-2"
-                  title="Editar registro"
-                  @click="onEdit(item)"
-                >
-                  <FontAwesomeIcon :icon="['far', 'edit']" class="" />
-                </button>
-                <button
-                  class="px-3 py-1 text-sm text-white bg-red-600 rounded-md hover:bg-red-500 focus:outline-none"
-                  title="Remover registro"
-                  @click="onDelete(item.id)"
-                >
-                  <FontAwesomeIcon :icon="['far', 'trash-can']" class="" />
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="flex flex-col mt-6">
         <div
-          class="flex flex-col items-center px-5 py-5 bg-white border-t xs:flex-row xs:justify-between"
+          class="py-2 -my-2 overflow-x-auto sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8"
         >
-          <span class="text-xs text-gray-900 xs:text-sm">
-            Mostrando {{ meta.from }} ao {{ meta.to }} de {{ meta.total }} registros
-          </span>
+          <div
+            class="inline-block min-w-full overflow-hidden align-middle border-b border-gray-200 shadow sm:rounded-lg"
+          >
+            <table class="min-w-full">
+              <thead>
+                <tr>
+                  <th
+                    class="px-6 py-3 text-xs font-medium leading-4 tracking-wider text-left text-gray-500 uppercase bg-gray-100 border-b border-gray-200 w-1"
+                  />
+                  <th
+                    class="px-6 py-3 text-xs font-medium leading-4 tracking-wider text-left text-gray-500 uppercase bg-gray-100 border-b border-gray-200"
+                  >
+                    Nome
+                  </th>
+                  <th
+                    class="px-6 py-3 text-xs font-medium leading-4 tracking-wider text-left text-gray-500 uppercase bg-gray-100 border-b border-gray-200"
+                  >
+                    Tipo
+                  </th>
+                  <th
+                    class="px-6 py-3 text-xs font-medium leading-4 tracking-wider text-left text-gray-500 uppercase bg-gray-100 border-b border-gray-200"
+                  >
+                    Status
+                  </th>
+                  <th
+                    class="px-6 py-3 text-xs font-medium leading-4 tracking-wider text-left text-gray-500 uppercase bg-gray-100 border-b border-gray-200 text-center"
+                  >
+                    Ação
+                  </th>
+                </tr>
+              </thead>
+              <tbody class="bg-white">
+                <tr v-for="(item, index) in categories_data" :key="index">
+                  <td
+                    class="px-6 py-4 border-b border-gray-200"
+                  >
+                    <div
+                      :style="{ background: item.color, fontSize: '10px', display: 'block', width: '25px', height: '25px' }"
+                      :title="item.color"
+                    />
+                  </td>
+                  <td
+                    class="px-6 py-4 border-b border-gray-200 whitespace-nowrap"
+                  >
+                    <div
+                      class="text-sm leading-5 text-gray-900"
+                    >
+                      {{ item.name }}
+                    </div>
+                  </td>
+                  <td
+                    class="px-6 py-4 border-b border-gray-200 whitespace-nowrap"
+                  >
+                    <div class="text-sm leading-5 text-gray-900">
+                      {{ data.categoryType[item.type] }}
+                    </div>
+                  </td>
+                  <td
+                    class="px-6 py-4 border-b border-gray-200 whitespace-nowrap"
+                  >
+                    <div
+                      class="inline-flex px-4 text-xs leading-5 font-semibold text-white rounded-full"
+                      :class="[item.status ? 'bg-green-800' : 'bg-red-600']"
+                    >
+                      {{ item.status ? 'Ativo' : 'Inativo' }}
+                    </div>
+                  </td>
+                  <td
+                    class="px-6 py-4 border-b border-gray-200 whitespace-nowrap text-center"
+                  >
+                    <button
+                      class="px-3 py-1 text-sm text-white bg-indigo-600 rounded-md hover:bg-indigo-500 focus:outline-none mr-2"
+                      title="Editar registro"
+                      @click="onEdit(item)"
+                    >
+                      <FontAwesomeIcon :icon="['far', 'edit']" class="" />
+                    </button>
+                    <button
+                      class="px-3 py-1 text-sm text-white bg-red-600 rounded-md hover:bg-red-500 focus:outline-none"
+                      title="Remover registro"
+                      @click="onDelete(item)"
+                    >
+                      <FontAwesomeIcon :icon="['far', 'trash-can']" class="" />
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <div
+              class="flex flex-col items-center px-5 py-5 bg-white border-t xs:flex-row xs:justify-between"
+            >
+              <span class="text-xs text-gray-900 xs:text-sm mt-2">
+                Mostrando {{ categories_meta.from }} ao {{ categories_meta.to }} de {{ categories_meta.total }} registros
+              </span>
 
-          <div class="inline-flex mt-2 xs:mt-0">
-            <button
-              :disabled="(meta.current_page - 1) === 0"
-              :class="[(meta.current_page - 1) === 0 ? 'bg-gray-100 hover:bg-gray-100' : 'bg-gray-300 hover:bg-gray-400']"
-              class="px-4 py-2 text-sm font-semibold text-gray-800 rounded-l"
-              @click="getCategories(meta.current_page - 1)"
-            >
-              Anterior
-            </button>
-            <button
-              :disabled="(meta.current_page + 1) === meta.last_page + 1"
-              :class="[(meta.current_page + 1) === meta.last_page + 1 ? 'bg-gray-100 hover:bg-gray-100' : 'bg-gray-300 hover:bg-gray-400']"
-              class="px-4 py-2 text-sm font-semibold text-gray-800 rounded-r"
-              @click="getCategories(categories.meta.current_page + 1)"
-            >
-              Próxima
-            </button>
+              <div class="inline-flex mt-2 xs:mt-0">
+                <button
+                  :disabled="(categories_meta.current_page - 1) === 0"
+                  :class="[(categories_meta.current_page - 1) === 0 ? 'bg-gray-100 hover:bg-gray-100' : 'bg-gray-300 hover:bg-gray-400']"
+                  class="px-4 py-2 text-sm font-semibold text-gray-800 rounded-l"
+                  @click="getCategories(categories_meta.current_page - 1)"
+                >
+                  Anterior
+                </button>
+                <button
+                  :disabled="(categories_meta.current_page + 1) === categories_meta.last_page + 1"
+                  :class="[(categories_meta.current_page + 1) === categories_meta.last_page + 1 ? 'bg-gray-100 hover:bg-gray-100' : 'bg-gray-300 hover:bg-gray-400']"
+                  class="px-4 py-2 text-sm font-semibold text-gray-800 rounded-r"
+                  @click="getCategories(categories_meta.current_page + 1)"
+                >
+                  Próxima
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>

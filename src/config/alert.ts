@@ -1,18 +1,18 @@
 import Swal from 'sweetalert2'
+import { type ToastOptions, toast } from 'vue3-toastify'
 
 export function alertSuccess(data: any) {
-  Swal.fire({
-    title: data,
-    icon: 'success',
-  })
+  toast.success(data, {
+    theme: 'colored',
+  } as ToastOptions)
 }
 
 export function alertError(data: any) {
-  Swal.fire({
-    title: data.title,
-    html: data.text,
-    icon: 'error',
-  })
+  toast.error(data.text, {
+    theme: 'colored',
+    autoClose: 7000,
+    dangerouslyHTMLString: true,
+  } as ToastOptions)
 }
 
 export async function alertConfirmed(data: any) {

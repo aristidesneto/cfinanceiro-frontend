@@ -6,6 +6,7 @@ import { vMaska } from 'maska'
 import { formatReal } from '@/utils/functions'
 import { alertConfirmed } from '@/config/alert'
 import CategorySelect from '@/composables/forms/CategorySelect.vue'
+import useCategoryApi from '@/composables/apis/useCategories.js'
 import { categoriesToSelect } from '@/utils/categories'
 
 const store = useStore()
@@ -64,7 +65,7 @@ const loadingButton = ref(false)
 const entries = computed(() => store.getters.entries_incomes)
 const group_income = computed(() => store.getters.entries_group_income)
 const detailed_month = ref()
-const categories = computed(() => categoriesToSelect(store.state.categories.categories))
+const categories = ref([])
 
 onMounted(() => {
   getIncomes()
@@ -82,12 +83,14 @@ async function getIncomes() {
   await store.dispatch('incomes', { params })
 }
 
-function getCategories() {
+async function getCategories() {
   const payload = {
     type: 'income',
     status: 1,
   }
-  store.dispatch('categories', { payload })
+  const { list } = useCategoryApi()
+  const { data } = await list(payload)
+  categories.value = categoriesToSelect(data.data, 'income')
 }
 
 function closeModal() {
