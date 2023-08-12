@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
-import { Select } from 'flowbite-vue'
+import { Input, Select } from 'flowbite-vue'
 import { alertConfirmed } from '@/config/alert'
 import useCategoryApi from '@/composables/apis/useCategories'
 
@@ -41,6 +41,7 @@ const data = {
     { value: 'income', name: 'Receita' },
     { value: 'expense', name: 'Despesa' },
   ],
+  types_select() { return data.types.filter(item => item.value !== 'all') },
 }
 
 const options = ref({
@@ -223,28 +224,22 @@ function onEdit(item: IFormData) {
             <form>
               <div class="grid grid-cols-1 gap-6 mt-4 sm:grid-cols-1">
                 <div>
-                  <label class="text-gray-700" for="username">Nome</label>
-                  <input
+                  <Input
                     v-model="dataCategory.name"
-                    class="w-full mt-2 border-gray-200 rounded-md focus:border-indigo-600 focus:ring focus:ring-opacity-40 focus:ring-indigo-500"
-                    type="text"
-                  >
+                    label="Nome"
+                  />
                 </div>
 
                 <div>
-                  <label class="text-gray-700" for="emailAddress">Tipo</label>
-                  <select
+                  <Select
                     v-model="dataCategory.type"
-                    class="w-full mt-2 border-gray-200 rounded-md focus:border-indigo-600 focus:ring focus:ring-opacity-40 focus:ring-indigo-500"
-                  >
-                    <option v-for="(item, key) in data.categoryType" :key="key" :value="key">
-                      {{ item }}
-                    </option>
-                  </select>
+                    :options="data.types_select()"
+                    label="Tipo"
+                  />
                 </div>
 
                 <div>
-                  <label class="text-gray-700" for="password">Cor</label>
+                  <label class="text-gray-800 font-medium text-sm">Cor</label>
                   <input
                     v-model="dataCategory.color"
                     class="w-full mt-2 border-gray-200 rounded-md focus:border-indigo-600 focus:ring focus:ring-opacity-40 focus:ring-indigo-500"
@@ -267,7 +262,7 @@ function onEdit(item: IFormData) {
             <!-- Footer -->
             <div class="flex justify-end mt-8">
               <button
-                class="p-3 px-6 py-3 mr-2 text-indigo-500 bg-transparent rounded-lg hover:bg-gray-100 hover:text-indigo-400 focus:outline-none"
+                class="px-4 px-2 py-3 mr-2 text-indigo-500 bg-transparent rounded-lg hover:bg-gray-100 hover:text-indigo-400 focus:outline-none"
                 @click="options.open = false"
               >
                 Fechar
@@ -277,6 +272,7 @@ function onEdit(item: IFormData) {
                 class="px-4 py-2 text-green-200 bg-green-800 rounded-md hover:bg-green-700 focus:outline-none focus:bg-green-700"
                 @click="onUpdate()"
               >
+                <FontAwesomeIcon icon="fa fa-floppy-disk" class="mr-2" />
                 Atualizar
               </button>
               <button
@@ -284,12 +280,7 @@ function onEdit(item: IFormData) {
                 class="px-4 py-2 text-green-200 bg-green-800 rounded-md hover:bg-green-700 focus:outline-none focus:bg-green-700"
                 @click="onCreate()"
               >
-                <span v-if="options.is_loading">
-                  <FontAwesomeIcon icon="fa-solid fa-circle-notch" spin class="mr-2" />
-                </span>
-                <span v-else>
-                  <FontAwesomeIcon icon="fa fa-floppy-disk" class="mr-2" />
-                </span>
+                <FontAwesomeIcon icon="fa fa-floppy-disk" class="mr-2" />
                 Cadastrar
               </button>
             </div>

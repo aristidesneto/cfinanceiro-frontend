@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useStore } from 'vuex'
 import { Input, Modal, Select, Tab, Tabs, Toggle } from 'flowbite-vue'
 import { vMaska } from 'maska'
-import GeneralExpense from '@/components/expenses/GeneralExpenseComponent.vue'
-import CreditCardExpenseComponent from '@/components/expenses/CreditCardExpenseComponent.vue'
+import TableComponent from '@/components/tables/TableComponent.vue'
 import CategorySelect from '@/composables/forms/CategorySelect.vue'
 import { monthExtension } from '@/utils/functions'
 import { categoriesToSelect } from '@/utils/categories'
-import useCategoryApi from '@/composables/apis/useCategories.js'
+import useCategoryApi from '@/composables/apis/useCategories'
+import useEntriesApi from '@/composables/apis/useEntries'
 
 const store = useStore()
 
@@ -53,9 +53,32 @@ const options = ref({
   isShowModal: false,
 })
 
+const fields = [
+  { id: 'title', name: 'Título' },
+  { id: 'category.name', name: 'Categoria' },
+  { id: 'due_date', name: 'Data de vencimento' },
+  { id: 'amount', name: 'Valor', format: 'money' },
+  { id: 'payday', name: 'Pago', badge: 'yellow' },
+  { id: 'observation', name: 'Observação' },
+]
+
+const fields_cards = [
+  { id: 'title', name: 'Título' },
+  { id: 'credit_card.name', name: 'Cartão' },
+  { id: 'category.name', name: 'Categoria' },
+  { id: 'due_date', name: 'Data de vencimento' },
+  { id: 'amount', name: 'Valor', format: 'money' },
+  { id: 'parcel', name: 'Parcela' },
+  { id: 'total_parcel', name: 'Total parcelas' },
+  { id: 'observation', name: 'Observação' },
+]
+
 // computed
-// const categories = computed(() => categoriesToSelect(store.state.categories.categories, 'expense'))
+const expenses_general = ref([])
+const expenses_credit_cards = ref([])
 const categories = ref([])
+const dueDateDisabled = ref(false)
+const isRecurringDisabled = ref(false)
 
 const creditCards = computed(() => {
   const cards_select = []
@@ -70,6 +93,40 @@ onMounted(() => {
   getExpenses()
 })
 
+watch(
+  () => dataExpense.value.credit_card_id,
+  (newValue, oldValue) => {
+    if (newValue) {
+      const cards = store.getters.credit_cards
+      const card = cards.filter(item => {
+        return item.id === dataExpense.value.credit_card_id
+      })[0]
+      const month = String(now.getMonth() + 1).padStart(2, '0')
+      dataExpense.value.due_date = `${card.due_date}/${month}/${now.getFullYear()}`
+    }
+  },
+  { deep: true },
+)
+
+watch(
+  () => dataExpense.value.payment,
+  (newValue, oldValue) => {
+    if (newValue === 'credit-card') {
+      dataExpense.value.is_recurring = false
+      dueDateDisabled.value = true
+      isRecurringDisabled.value = true
+      return
+    }
+
+    isRecurringDisabled.value = false
+    dueDateDisabled.value = false
+
+    dataExpense.value.due_date = ''
+    dataExpense.value.credit_card_id = ''
+  },
+  { deep: true },
+)
+
 // methods/functions
 function openModal() {
   getCategories()
@@ -79,14 +136,6 @@ function openModal() {
 
 function closeModal() {
   options.value.isShowModal = false
-}
-
-function calculateRecurring() {
-  if (dataExpense.value.payment === 'credit-card') {
-    dataExpense.value.is_recurring = false
-    return true
-  }
-  return false
 }
 
 async function getCategories() {
@@ -116,17 +165,19 @@ function getCreditCards() {
   store.dispatch('creditCards', { params })
 }
 
-function getExpenses() {
+async function getExpenses() {
   const year = now.getFullYear()
   const month = String(now.getMonth() + 1).padStart(2, '0')
   const last_day = new Date(year, Number(month), 0).getDate()
   const params = {
-    type: 'expense',
     order_by: '+:due_date',
     start_period: `${year}-${month}-01`,
     end_period: `${year}-${month}-${last_day}`,
   }
-  store.dispatch('expenses', { params })
+  const { getExpenses } = useEntriesApi()
+  const { data } = await getExpenses(params)
+  expenses_general.value = data.data.filter((item) => item.credit_card === null)
+  expenses_credit_cards.value = data.data.filter((item) => item.credit_card !== null)
 }
 
 async function onCreate() {
@@ -170,10 +221,17 @@ async function onCreate() {
         <div class="p-2 bg-white rounded-md shadow-md">
           <Tabs v-model="activeTab" variant="underline" class="pt-5">
             <Tab name="first" title="Despesas Gerais">
-              <GeneralExpense />
+              <!-- <GeneralExpense /> -->
+              <TableComponent
+                :items="expenses_general"
+                :fields="fields"
+              />
             </Tab>
             <Tab name="second" title="Despesas Cartão de Crédito">
-              <CreditCardExpenseComponent />
+              <TableComponent
+                :items="expenses_credit_cards"
+                :fields="fields_cards"
+              />
             </Tab>
           </Tabs>
         </div>
@@ -201,7 +259,7 @@ async function onCreate() {
             <div class="sm:col-span-3 pt-6">
               <Toggle
                 v-model="dataExpense.is_recurring"
-                :disabled="calculateRecurring()"
+                :disabled="isRecurringDisabled"
                 label="Despesa recorrente"
               />
             </div>
@@ -229,7 +287,6 @@ async function onCreate() {
                 :options="paymentType"
                 placeholder="Selecione a forma de pagamento"
                 label="Forma de pagamento"
-                @change="calculateRecurring"
               />
             </div>
 
@@ -268,6 +325,7 @@ async function onCreate() {
               <Input
                 v-model="dataExpense.due_date"
                 v-maska
+                :disabled="dueDateDisabled"
                 data-maska="##/##/####"
                 label="Data de vencimento"
                 placeholder="dd/mm/YYYY"
