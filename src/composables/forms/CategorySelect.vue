@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { Select } from 'flowbite-vue'
+import { Select } from 'flowbite-vue';
 
 const props = defineProps({
   items: {
     type: Object,
   },
-})
+});
 </script>
 
 <template>

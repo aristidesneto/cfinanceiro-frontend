@@ -1,29 +1,29 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
-import { useStore } from 'vuex'
-import { Input, Modal, Select, Tab, Tabs, Toggle } from 'flowbite-vue'
-import { vMaska } from 'maska'
-import TableComponent from '@/components/tables/TableComponent.vue'
-import CategorySelect from '@/composables/forms/CategorySelect.vue'
-import { monthExtension } from '@/utils/functions'
-import { categoriesToSelect } from '@/utils/categories'
-import useCategoryApi from '@/composables/apis/useCategories'
-import useEntriesApi from '@/composables/apis/useEntries'
+import { computed, onMounted, ref, watch } from 'vue';
+import { useStore } from 'vuex';
+import { Input, Modal, Select, Tab, Tabs, Toggle } from 'flowbite-vue';
+import { vMaska } from 'maska';
+import TableComponent from '@/components/tables/TableComponent.vue';
+import CategorySelect from '@/composables/forms/CategorySelect.vue';
+import { monthExtension } from '@/utils/functions';
+import { categoriesToSelect } from '@/utils/categories';
+import useCategoryApi from '@/composables/apis/useCategories';
+import entrieServices from '../../services/entriesService';
 
-const store = useStore()
+const store = useStore();
 
 // data
 interface IExpense {
-  title: string
-  is_recurring: boolean
-  start_date: string
-  due_date: string
-  category_id: string
-  credit_card_id: string
-  payment: string
-  parcel: number
-  amount: number
-  observation: string
+  title: string;
+  is_recurring: boolean;
+  start_date: string;
+  due_date: string;
+  category_id: string;
+  credit_card_id: string;
+  payment: string;
+  parcel: number;
+  amount: number;
+  observation: string;
 }
 
 const dataExpense = ref<IExpense>({
@@ -37,21 +37,21 @@ const dataExpense = ref<IExpense>({
   parcel: 1,
   amount: 0,
   observation: '',
-})
+});
 
 const paymentType = ref([
   { name: 'Cartão de crédito', value: 'credit-card' },
   { name: 'Cartão de débito', value: 'debit-card' },
   { name: 'Dinheiro', value: 'money' },
-])
+]);
 
-const activeTab = ref('first')
+const activeTab = ref('first');
 
-const now = new Date()
+const now = new Date();
 
 const options = ref({
   isShowModal: false,
-})
+});
 
 const fields = [
   { id: 'title', name: 'Título' },
@@ -60,7 +60,7 @@ const fields = [
   { id: 'amount', name: 'Valor', format: 'money' },
   { id: 'payday', name: 'Pago', badge: 'yellow' },
   { id: 'observation', name: 'Observação' },
-]
+];
 
 const fields_cards = [
   { id: 'title', name: 'Título' },
@@ -71,71 +71,73 @@ const fields_cards = [
   { id: 'parcel', name: 'Parcela' },
   { id: 'total_parcel', name: 'Total parcelas' },
   { id: 'observation', name: 'Observação' },
-]
+];
 
 // computed
-const expenses_general = ref([])
-const expenses_credit_cards = ref([])
-const categories = ref([])
-const dueDateDisabled = ref(false)
-const isRecurringDisabled = ref(false)
+const expenses_general = ref([]);
+const expenses_credit_cards = ref([]);
+const categories = ref([]);
+const dueDateDisabled = ref(false);
+const isRecurringDisabled = ref(false);
 
 const creditCards = computed(() => {
-  const cards_select = []
+  const cards_select = [];
   Object.values(store.getters.credit_cards).forEach((item) => {
-    return cards_select.push({ name: item.name, value: item.id })
-  })
-  return cards_select
-})
+    return cards_select.push({ name: item.name, value: item.id });
+  });
+  return cards_select;
+});
 
 // created/mounted
 onMounted(() => {
-  getExpenses()
-})
+  getExpenses();
+});
 
 watch(
   () => dataExpense.value.credit_card_id,
   (newValue, oldValue) => {
     if (newValue) {
-      const cards = store.getters.credit_cards
-      const card = cards.filter(item => {
-        return item.id === dataExpense.value.credit_card_id
-      })[0]
-      const month = String(now.getMonth() + 1).padStart(2, '0')
-      dataExpense.value.due_date = `${card.due_date}/${month}/${now.getFullYear()}`
+      const cards = store.getters.credit_cards;
+      const card = cards.filter((item) => {
+        return item.id === dataExpense.value.credit_card_id;
+      })[0];
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      dataExpense.value.due_date = `${
+        card.due_date
+      }/${month}/${now.getFullYear()}`;
     }
   },
   { deep: true },
-)
+);
 
 watch(
   () => dataExpense.value.payment,
   (newValue, oldValue) => {
     if (newValue === 'credit-card') {
-      dataExpense.value.is_recurring = false
-      dueDateDisabled.value = true
-      isRecurringDisabled.value = true
-      return
+      dataExpense.value.is_recurring = false;
+      dueDateDisabled.value = true;
+      isRecurringDisabled.value = true;
+      return;
     }
 
-    isRecurringDisabled.value = false
-    dueDateDisabled.value = false
+    isRecurringDisabled.value = false;
+    dueDateDisabled.value = false;
 
-    dataExpense.value.due_date = ''
-    dataExpense.value.credit_card_id = ''
+    dataExpense.value.due_date = '';
+    dataExpense.value.credit_card_id = '';
   },
   { deep: true },
-)
+);
 
 // methods/functions
 function openModal() {
-  getCategories()
-  getCreditCards()
-  options.value.isShowModal = true
+  getCategories();
+  getCreditCards();
+  options.value.isShowModal = true;
 }
 
 function closeModal() {
-  options.value.isShowModal = false
+  options.value.isShowModal = false;
 }
 
 async function getCategories() {
@@ -143,58 +145,66 @@ async function getCategories() {
     type: 'expense',
     status: 1,
     paginate: 0,
-  }
-  const { list } = useCategoryApi()
-  const { data } = await list(payload)
-  categories.value = categoriesToSelect(data.data, 'expense')
+  };
+  const { list } = useCategoryApi();
+  const { data } = await list(payload);
+  categories.value = categoriesToSelect(data.data, 'expense');
 }
 
 const optionsMaska = {
-  preProcess: value => value.replace(/[$,]/g, ''),
+  preProcess: (value) => value.replace(/[$,]/g, ''),
   postProcess: (value) => {
-    value = value.replace('.', '').replace(',', '').replace(/\D/g, '')
-    const options = { minimumFractionDigits: 2 }
-    const result = new Intl.NumberFormat('pt-BR', options)
-      .format(Number.parseFloat(value) / 100)
-    return `R$ ${result}`
+    value = value.replace('.', '').replace(',', '').replace(/\D/g, '');
+    const options = { minimumFractionDigits: 2 };
+    const result = new Intl.NumberFormat('pt-BR', options).format(
+      Number.parseFloat(value) / 100,
+    );
+    return `R$ ${result}`;
   },
-}
+};
 
 function getCreditCards() {
-  const params = {}
-  store.dispatch('creditCards', { params })
+  const params = {};
+  store.dispatch('creditCards', { params });
 }
 
 async function getExpenses() {
-  const year = now.getFullYear()
-  const month = String(now.getMonth() + 1).padStart(2, '0')
-  const last_day = new Date(year, Number(month), 0).getDate()
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const last_day = new Date(year, Number(month), 0).getDate();
   const params = {
     order_by: '+:due_date',
     start_period: `${year}-${month}-01`,
     end_period: `${year}-${month}-${last_day}`,
-  }
-  const { getExpenses } = useEntriesApi()
-  const { data } = await getExpenses(params)
-  expenses_general.value = data.data.filter((item) => item.credit_card === null)
-  expenses_credit_cards.value = data.data.filter((item) => item.credit_card !== null)
+  };
+  const { listExpenses } = entrieServices();
+  const { data } = await listExpenses(params);
+  expenses_general.value = data.data.filter(
+    (item) => item.credit_card === null,
+  );
+  expenses_credit_cards.value = data.data.filter(
+    (item) => item.credit_card !== null,
+  );
 }
 
 async function onCreate() {
   const payload = {
-    type: 'expense',
     title: dataExpense.value.title,
     is_recurring: dataExpense.value.is_recurring,
     start_date: dataExpense.value.start_date,
     due_date: dataExpense.value.due_date,
     category_id: dataExpense.value.category_id,
-    credit_card_id: dataExpense.value.credit_card_id === '' ? null : dataExpense.value.credit_card_id,
+    credit_card_id:
+      dataExpense.value.credit_card_id === ''
+        ? null
+        : dataExpense.value.credit_card_id,
     parcel: dataExpense.value.parcel,
     amount: dataExpense.value.amount,
     observation: dataExpense.value.observation,
-  }
-  await store.dispatch('createExpense', { payload })
-  getExpenses()
+  };
+  const { createExpense } = entrieServices();
+  await createExpense(payload);
+  getExpenses();
 }
 </script>
 
@@ -222,10 +232,7 @@ async function onCreate() {
           <Tabs v-model="activeTab" variant="underline" class="pt-5">
             <Tab name="first" title="Despesas Gerais">
               <!-- <GeneralExpense /> -->
-              <TableComponent
-                :items="expenses_general"
-                :fields="fields"
-              />
+              <TableComponent :items="expenses_general" :fields="fields" />
             </Tab>
             <Tab name="second" title="Despesas Cartão de Crédito">
               <TableComponent
@@ -242,7 +249,8 @@ async function onCreate() {
     <Modal v-if="options.isShowModal" size="5xl" @close="closeModal">
       <template #header>
         <div class="flex items-center text-lg">
-          <FontAwesomeIcon :icon="['fas', 'circle-plus']" class="mr-2" /> Lançamento de despesa
+          <FontAwesomeIcon :icon="['fas', 'circle-plus']" class="mr-2" />
+          Lançamento de despesa
         </div>
       </template>
 
@@ -250,10 +258,7 @@ async function onCreate() {
         <form @submit.prevent="onCreate">
           <div class="grid grid-cols-1 gap-6 mt-4 sm:grid-cols-6">
             <div class="sm:col-span-3">
-              <Input
-                v-model="dataExpense.title"
-                label="Título"
-              />
+              <Input v-model="dataExpense.title" label="Título" />
             </div>
 
             <div class="sm:col-span-3 pt-6">
@@ -333,23 +338,22 @@ async function onCreate() {
             </div>
 
             <div class="sm:col-span-6">
-              <Input
-                v-model="dataExpense.observation"
-                label="Observação"
-              />
+              <Input v-model="dataExpense.observation" label="Observação" />
             </div>
 
             <div class="sm:col-span-6 text-right">
               <button
                 class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
               >
-                <FontAwesomeIcon :icon="['fas', 'floppy-disk']" class="mr-1" /> Cadastrar
+                <FontAwesomeIcon :icon="['fas', 'floppy-disk']" class="mr-1" />
+                Cadastrar
               </button>
               <button
                 class="text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-800 ml-4"
                 @click="closeModal"
               >
-                <FontAwesomeIcon :icon="['fas', 'circle-xmark']" class="mr-1" /> Fechar
+                <FontAwesomeIcon :icon="['fas', 'circle-xmark']" class="mr-1" />
+                Fechar
               </button>
             </div>
           </div>

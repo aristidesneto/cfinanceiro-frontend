@@ -1,16 +1,16 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { useStore } from 'vuex'
-import TableComponent from '@/components/tables/TableComponent.vue'
+import { computed } from 'vue';
+import { useStore } from 'vuex';
+import TableComponent from '@/components/tables/TableComponent.vue';
 
-const store = useStore()
+const store = useStore();
 
 const entries = computed(() => {
-  const items = store.state.entries.data_entries_expense
+  const items = store.state.entries.data_entries_expense;
   return Object.values(items).filter((item) => {
-    return item.credit_card
-  })
-})
+    return item.credit_card;
+  });
+});
 
 const fields = [
   { id: 'title', name: 'Título' },
@@ -21,12 +21,9 @@ const fields = [
   { id: 'parcel', name: 'Parcela' },
   { id: 'total_parcel', name: 'Total parcelas' },
   { id: 'observation', name: 'Observação' },
-]
+];
 </script>
 
 <template>
-  <TableComponent
-    :items="entries"
-    :fields="fields"
-  />
+  <TableComponent :items="entries" :fields="fields" />
 </template>

@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
-import { useStore } from 'vuex'
+import { onMounted, ref } from 'vue';
+import { useStore } from 'vuex';
 
-const store = useStore()
+const store = useStore();
 
 // interface User {
 //   name: string
@@ -13,22 +13,19 @@ const store = useStore()
 //   password_confirmation: string
 // }
 
-const user = ref({})
+const user = ref({});
 
 onMounted(() => {
-  store.dispatch('me')
-    .then(() => {
-      user.value = store.getters.user
-    })
-})
+  store.dispatch('me').then(() => {
+    user.value = store.getters.user;
+  });
+});
 </script>
 
 <template>
   <div>
     <div class="flex">
-      <h3 class="text-3xl font-semibold text-gray-700">
-        Minha conta
-      </h3>
+      <h3 class="text-3xl font-semibold text-gray-700">Minha conta</h3>
     </div>
 
     <div class="mt-8">
@@ -46,7 +43,7 @@ onMounted(() => {
                   v-model="user.name"
                   class="w-full mt-2 border-gray-200 rounded-md focus:border-indigo-600 focus:ring focus:ring-opacity-40 focus:ring-indigo-500"
                   type="text"
-                >
+                />
               </div>
 
               <div>
@@ -55,17 +52,19 @@ onMounted(() => {
                   v-model="user.email"
                   class="w-full mt-2 border-gray-200 rounded-md focus:border-indigo-600 focus:ring focus:ring-opacity-40 focus:ring-indigo-500"
                   type="email"
-                >
+                />
               </div>
 
               <div>
-                <label class="text-gray-700" for="emailAddress">Administrador</label>
+                <label class="text-gray-700" for="emailAddress"
+                  >Administrador</label
+                >
                 <input
                   v-model="user.is_admin"
                   disabled
                   class="w-full mt-2 border-gray-200 rounded-md focus:border-indigo-600 focus:ring focus:ring-opacity-40 focus:ring-indigo-500"
                   type="email"
-                >
+                />
               </div>
 
               <div>
@@ -75,7 +74,7 @@ onMounted(() => {
                   disabled
                   class="w-full mt-2 border-gray-200 rounded-md focus:border-indigo-600 focus:ring focus:ring-opacity-40 focus:ring-indigo-500"
                   type="email"
-                >
+                />
               </div>
             </div>
 
@@ -107,17 +106,19 @@ onMounted(() => {
                   placeholder="Nova senha"
                   class="w-full mt-2 border-gray-200 rounded-md focus:border-indigo-600 focus:ring focus:ring-opacity-40 focus:ring-indigo-500"
                   type="password"
-                >
+                />
               </div>
 
               <div>
-                <label class="text-gray-700" for="emailAddress">Confirmar senha</label>
+                <label class="text-gray-700" for="emailAddress"
+                  >Confirmar senha</label
+                >
                 <input
                   v-model="user.password_confirmation"
                   placeholder="Confirme a nova senha"
                   class="w-full mt-2 border-gray-200 rounded-md focus:border-indigo-600 focus:ring focus:ring-opacity-40 focus:ring-indigo-500"
                   type="password"
-                >
+                />
               </div>
             </div>
 

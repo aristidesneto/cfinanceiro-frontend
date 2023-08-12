@@ -1,6 +1,14 @@
 <script setup lang="ts">
-import { Badge, Table, TableBody, TableCell, TableHead, TableHeadCell, TableRow } from 'flowbite-vue'
-import { formatReal } from '@/utils/functions'
+import {
+  Badge,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeadCell,
+  TableRow,
+} from 'flowbite-vue';
+import { formatReal } from '@/utils/functions';
 
 const props = defineProps({
   items: {
@@ -17,15 +25,15 @@ const props = defineProps({
     type: Boolean,
     default: true,
   },
-})
+});
 
 function normalizeField(field, item) {
-  const arr = field.split('.')
-  return item[arr[0]][arr[1]]
+  const arr = field.split('.');
+  return item[arr[0]][arr[1]];
 }
 
 function fieldIsRelationship(field) {
-  return field.includes('.')
+  return field.includes('.');
 }
 </script>
 
@@ -35,9 +43,7 @@ function fieldIsRelationship(field) {
       <TableHeadCell v-for="(item, key) in props.fields" :key="key">
         {{ item.name }}
       </TableHeadCell>
-      <TableHeadCell>
-        Ação
-      </TableHeadCell>
+      <TableHeadCell> Ação </TableHeadCell>
     </TableHead>
     <TableBody>
       <TableRow v-for="item in props.items" :key="item">
@@ -50,9 +56,7 @@ function fieldIsRelationship(field) {
           </div>
           <div v-else-if="value.badge">
             <div v-if="item[value.id] === null">
-              <Badge :type="value.badge">
-                Pendente
-              </Badge>
+              <Badge :type="value.badge"> Pendente </Badge>
             </div>
             <div v-else>
               <Badge :type="value.badge">

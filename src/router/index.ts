@@ -1,20 +1,19 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import { useStore } from 'vuex'
-import routes from './routes'
+import { createRouter, createWebHistory } from 'vue-router';
+import { useStore } from 'vuex';
+import routes from './routes';
 
 const router = createRouter({
   history: createWebHistory(),
   routes,
-})
+});
 
 router.beforeEach(async (to) => {
-  const isAuthenticated = useStore().getters.isAuthenticated
+  const isAuthenticated = useStore().getters.isAuthenticated;
 
-  if (to.matched.some(record => record.meta.requiresAuth)) {
-    if (!isAuthenticated)
-      return { name: 'Login' }
+  if (to.matched.some((record) => record.meta.requiresAuth)) {
+    if (!isAuthenticated) return { name: 'Login' };
   }
-  return true
-})
+  return true;
+});
 
-export default router
+export default router;

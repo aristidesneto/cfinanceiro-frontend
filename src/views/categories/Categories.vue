@@ -1,15 +1,15 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
-import { Input, Select } from 'flowbite-vue'
-import { alertConfirmed } from '@/config/alert'
-import useCategoryApi from '@/composables/apis/useCategories'
+import { onMounted, reactive, ref } from 'vue';
+import { Input, Select } from 'flowbite-vue';
+import { alertConfirmed } from '@/config/alert';
+import useCategoryApi from '@/composables/apis/useCategories';
 
 interface IFormData {
-  id: number
-  name: string
-  type: string
-  color: string
-  status: boolean
+  id: number;
+  name: string;
+  type: string;
+  color: string;
+  status: boolean;
 }
 
 const dataCategory = reactive<IFormData>({
@@ -18,7 +18,7 @@ const dataCategory = reactive<IFormData>({
   type: 'income',
   color: '',
   status: false,
-})
+});
 
 const data = {
   categoryType: {
@@ -41,8 +41,10 @@ const data = {
     { value: 'income', name: 'Receita' },
     { value: 'expense', name: 'Despesa' },
   ],
-  types_select() { return data.types.filter(item => item.value !== 'all') },
-}
+  types_select() {
+    return data.types.filter((item) => item.value !== 'all');
+  },
+};
 
 const options = ref({
   filter: {
@@ -59,17 +61,17 @@ const options = ref({
   },
   open: false,
   is_loading: false,
-})
+});
 
-const categories_data = ref([])
-const categories_meta = ref([])
+const categories_data = ref([]);
+const categories_meta = ref([]);
 
 onMounted(() => {
-  getCategories()
-})
+  getCategories();
+});
 
 function isLoading() {
-  options.value.is_loading = !options.value.is_loading
+  options.value.is_loading = !options.value.is_loading;
 }
 
 // Functions
@@ -79,43 +81,43 @@ async function getCategories(current_page = 1) {
     status: options.value.filter.status,
     total_page: options.value.paginate.total_page,
     page: current_page,
-  }
-  const { list } = useCategoryApi()
-  const { data } = await list(payload)
-  categories_data.value = data.data
-  categories_meta.value = data.meta
+  };
+  const { list } = useCategoryApi();
+  const { data } = await list(payload);
+  categories_data.value = data.data;
+  categories_meta.value = data.meta;
 }
 
 async function onCreate() {
-  isLoading()
+  isLoading();
   const payload = {
     name: dataCategory.name,
     type: dataCategory.type,
     color: dataCategory.color,
     status: true,
-  }
-  const { store } = useCategoryApi()
+  };
+  const { store } = useCategoryApi();
   await store(payload)
     .then(() => {
-      options.value.open = false
-      getCategories()
+      options.value.open = false;
+      getCategories();
     })
     .catch(() => {
-      isLoading()
-    })
+      isLoading();
+    });
 }
 
 async function onUpdate() {
-  options.value.open = false
+  options.value.open = false;
   const payload = {
     name: dataCategory.name,
     type: dataCategory.type,
     color: dataCategory.color,
     status: dataCategory.status,
-  }
-  const { update } = useCategoryApi()
-  await update(dataCategory.id, payload)
-  getCategories()
+  };
+  const { update } = useCategoryApi();
+  await update(dataCategory.id, payload);
+  getCategories();
 }
 
 function onDelete(item: any) {
@@ -126,41 +128,39 @@ function onDelete(item: any) {
     cancelButtonText: 'Cancelar',
   }).then(async (res: any) => {
     if (res.isConfirmed) {
-      const { remove } = useCategoryApi()
-      await remove(item.id)
-      getCategories()
+      const { remove } = useCategoryApi();
+      await remove(item.id);
+      getCategories();
     }
-  })
+  });
 }
 
 function openCreate() {
-  options.value.modal.title = 'Cadastrar'
-  options.value.modal.showCheckbox = false
-  options.value.open = true
-  dataCategory.id = 0
-  dataCategory.name = ''
-  dataCategory.type = 'income'
-  dataCategory.color = '#d91212'
+  options.value.modal.title = 'Cadastrar';
+  options.value.modal.showCheckbox = false;
+  options.value.open = true;
+  dataCategory.id = 0;
+  dataCategory.name = '';
+  dataCategory.type = 'income';
+  dataCategory.color = '#d91212';
 }
 
 function onEdit(item: IFormData) {
-  options.value.modal.title = 'Editar'
-  options.value.modal.showCheckbox = true
-  options.value.open = true
+  options.value.modal.title = 'Editar';
+  options.value.modal.showCheckbox = true;
+  options.value.open = true;
 
-  dataCategory.id = item.id
-  dataCategory.name = item.name
-  dataCategory.type = item.type
-  dataCategory.color = item.color
-  dataCategory.status = Boolean(item.status)
+  dataCategory.id = item.id;
+  dataCategory.name = item.name;
+  dataCategory.type = item.type;
+  dataCategory.color = item.color;
+  dataCategory.status = Boolean(item.status);
 }
 </script>
 
 <template>
   <div>
-    <h3 class="text-3xl font-medium text-gray-700">
-      Categorias
-    </h3>
+    <h3 class="text-3xl font-medium text-gray-700">Categorias</h3>
   </div>
 
   <div class="mt-4">
@@ -224,10 +224,7 @@ function onEdit(item: IFormData) {
             <form>
               <div class="grid grid-cols-1 gap-6 mt-4 sm:grid-cols-1">
                 <div>
-                  <Input
-                    v-model="dataCategory.name"
-                    label="Nome"
-                  />
+                  <Input v-model="dataCategory.name" label="Nome" />
                 </div>
 
                 <div>
@@ -244,7 +241,7 @@ function onEdit(item: IFormData) {
                     v-model="dataCategory.color"
                     class="w-full mt-2 border-gray-200 rounded-md focus:border-indigo-600 focus:ring focus:ring-opacity-40 focus:ring-indigo-500"
                     type="color"
-                  >
+                  />
                 </div>
 
                 <div v-if="options.modal.showCheckbox">
@@ -253,7 +250,7 @@ function onEdit(item: IFormData) {
                       v-model="dataCategory.status"
                       type="checkbox"
                       class="w-5 h-5 text-indigo-600 rounded-md focus:ring-indigo-500"
-                    ><span class="ml-2 text-gray-700">Ativo</span>
+                    /><span class="ml-2 text-gray-700">Ativo</span>
                   </label>
                 </div>
               </div>
@@ -325,20 +322,22 @@ function onEdit(item: IFormData) {
               </thead>
               <tbody class="bg-white">
                 <tr v-for="(item, index) in categories_data" :key="index">
-                  <td
-                    class="px-6 py-4 border-b border-gray-200"
-                  >
+                  <td class="px-6 py-4 border-b border-gray-200">
                     <div
-                      :style="{ background: item.color, fontSize: '10px', display: 'block', width: '25px', height: '25px' }"
+                      :style="{
+                        background: item.color,
+                        fontSize: '10px',
+                        display: 'block',
+                        width: '25px',
+                        height: '25px',
+                      }"
                       :title="item.color"
                     />
                   </td>
                   <td
                     class="px-6 py-4 border-b border-gray-200 whitespace-nowrap"
                   >
-                    <div
-                      class="text-sm leading-5 text-gray-900"
-                    >
+                    <div class="text-sm leading-5 text-gray-900">
                       {{ item.name }}
                     </div>
                   </td>
@@ -384,21 +383,35 @@ function onEdit(item: IFormData) {
               class="flex flex-col items-center px-5 py-5 bg-white border-t xs:flex-row xs:justify-between"
             >
               <span class="text-xs text-gray-900 xs:text-sm mt-2">
-                Mostrando {{ categories_meta.from }} ao {{ categories_meta.to }} de {{ categories_meta.total }} registros
+                Mostrando {{ categories_meta.from }} ao
+                {{ categories_meta.to }} de
+                {{ categories_meta.total }} registros
               </span>
 
               <div class="inline-flex mt-2 xs:mt-0">
                 <button
-                  :disabled="(categories_meta.current_page - 1) === 0"
-                  :class="[(categories_meta.current_page - 1) === 0 ? 'bg-gray-100 hover:bg-gray-100' : 'bg-gray-300 hover:bg-gray-400']"
+                  :disabled="categories_meta.current_page - 1 === 0"
+                  :class="[
+                    categories_meta.current_page - 1 === 0
+                      ? 'bg-gray-100 hover:bg-gray-100'
+                      : 'bg-gray-300 hover:bg-gray-400',
+                  ]"
                   class="px-4 py-2 text-sm font-semibold text-gray-800 rounded-l"
                   @click="getCategories(categories_meta.current_page - 1)"
                 >
                   Anterior
                 </button>
                 <button
-                  :disabled="(categories_meta.current_page + 1) === categories_meta.last_page + 1"
-                  :class="[(categories_meta.current_page + 1) === categories_meta.last_page + 1 ? 'bg-gray-100 hover:bg-gray-100' : 'bg-gray-300 hover:bg-gray-400']"
+                  :disabled="
+                    categories_meta.current_page + 1 ===
+                    categories_meta.last_page + 1
+                  "
+                  :class="[
+                    categories_meta.current_page + 1 ===
+                    categories_meta.last_page + 1
+                      ? 'bg-gray-100 hover:bg-gray-100'
+                      : 'bg-gray-300 hover:bg-gray-400',
+                  ]"
                   class="px-4 py-2 text-sm font-semibold text-gray-800 rounded-r"
                   @click="getCategories(categories_meta.current_page + 1)"
                 >

@@ -1,7 +1,7 @@
-import { alertSuccess } from '../../../config/alert'
+import { alertSuccess } from '../../../config/alert';
 
 // import { categoriesToSelect } from '../../../utils/categories'
-import { api } from '../../../config/api'
+import { api } from '../../../config/api';
 
 export default {
   // async categories({ commit }, { payload }) {
@@ -22,7 +22,6 @@ export default {
   //     .then(res => alertSuccess(res))
   // },
   async updateCategory({ commit }, { id, payload }) {
-    await api.put(`categories/${id}`, payload)
-      .then(res => alertSuccess(res))
+    await api.put(`categories/${id}`, payload).then((res) => alertSuccess(res));
   },
-}
+};

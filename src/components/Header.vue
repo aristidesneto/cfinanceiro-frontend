@@ -1,18 +1,18 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useStore } from 'vuex'
-import { useRouter } from 'vue-router'
-import { useSidebar } from '../composables/useSidebar'
+import { ref } from 'vue';
+import { useStore } from 'vuex';
+import { useRouter } from 'vue-router';
+import { useSidebar } from '../composables/useSidebar';
 
-const dropdownOpen = ref(false)
-const { isOpen } = useSidebar()
+const dropdownOpen = ref(false);
+const { isOpen } = useSidebar();
 
-const router = useRouter()
-const store = useStore()
+const router = useRouter();
+const store = useStore();
 
 async function logout() {
-  await store.dispatch('logout')
-  router.push('login')
+  await store.dispatch('logout');
+  router.push('login');
 }
 </script>
 
@@ -58,7 +58,7 @@ async function logout() {
           class="w-32 pl-10 pr-4 text-indigo-600 border-gray-200 rounded-md sm:w-64 focus:border-indigo-600 focus:ring focus:ring-opacity-40 focus:ring-indigo-500"
           type="text"
           placeholder="Search"
-        >
+        />
       </div>
     </div>
 
@@ -89,7 +89,7 @@ async function logout() {
             class="object-cover w-full h-full"
             src="https://images.unsplash.com/photo-1528892952291-009c663ce843?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=296&q=80"
             alt="Your avatar"
-          >
+          />
         </button>
 
         <div

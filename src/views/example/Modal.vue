@@ -1,14 +1,12 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref } from 'vue';
 
-const open = ref(false)
+const open = ref(false);
 </script>
 
 <template>
   <div>
-    <h3 class="text-3xl font-medium text-gray-700">
-      Modal
-    </h3>
+    <h3 class="text-3xl font-medium text-gray-700">Modal</h3>
     <button
       class="px-6 py-3 mt-3 font-medium tracking-wide text-white bg-indigo-600 rounded-md hover:bg-indigo-500 focus:outline-none"
       @click="open = true"
@@ -50,9 +48,7 @@ const open = ref(false)
         <div class="px-6 py-4 text-left modal-content">
           <!-- Title -->
           <div class="flex items-center justify-between pb-3">
-            <p class="text-2xl font-bold">
-              Modal Title
-            </p>
+            <p class="text-2xl font-bold">Modal Title</p>
             <div class="z-50 cursor-pointer modal-close" @click="open = false">
               <svg
                 class="text-black fill-current"

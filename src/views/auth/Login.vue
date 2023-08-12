@@ -1,71 +1,71 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { useStore } from 'vuex'
+import { onMounted, ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { useStore } from 'vuex';
 
-const router = useRouter()
-const store = useStore()
+const router = useRouter();
+const store = useStore();
 
 interface FormData {
-  email: string
-  password: string
-  remember: boolean
+  email: string;
+  password: string;
+  remember: boolean;
 }
 
 interface Message {
-  error: string
-  btn_text: string
+  error: string;
+  btn_text: string;
 }
 
-const isDisabled = ref(false)
-const btnText = 'Entrar'
+const isDisabled = ref(false);
+const btnText = 'Entrar';
 
 const dataLogin = ref<FormData>({
   email: 'aristidesbneto@gmail.com',
   password: 'password',
   remember: false,
-})
+});
 
 const message = ref<Message>({
   error: '',
   btn_text: btnText,
-})
+});
 
 function finished() {
-  isDisabled.value = false
-  message.value.btn_text = btnText
+  isDisabled.value = false;
+  message.value.btn_text = btnText;
 }
 
 function loading() {
-  isDisabled.value = true
-  message.value.btn_text = 'Aguarde...'
+  isDisabled.value = true;
+  message.value.btn_text = 'Aguarde...';
 }
 
 onMounted(() => {
-  store.dispatch('me')
-    .then(() => router.replace('dashboard'))
-})
+  store.dispatch('me').then(() => router.replace('dashboard'));
+});
 
 function login() {
-  loading()
+  loading();
   if (dataLogin.value.email === '' || dataLogin.value.password === '') {
-    message.value.error = 'Informe as credenciais de login'
-    finished()
-    return false
+    message.value.error = 'Informe as credenciais de login';
+    finished();
+    return false;
   }
 
   const payload = {
     email: dataLogin.value.email,
     password: dataLogin.value.password,
     remember: dataLogin.value.remember,
-  }
+  };
 
-  store.dispatch('onLogin', { payload })
+  store
+    .dispatch('onLogin', { payload })
     .then(() => router.push('dashboard'))
     .catch((errors) => {
-      message.value.error = errors.response.data.errors
-      finished()
-    })
+      message.value.error = errors.response.data.errors;
+      finished();
+    });
 }
 </script>
 
@@ -92,7 +92,9 @@ function login() {
             fill="white"
           />
         </svg>
-        <span class="text-2xl font-semibold text-gray-700">Controle Financeiro</span>
+        <span class="text-2xl font-semibold text-gray-700"
+          >Controle Financeiro</span
+        >
       </div>
 
       <div v-if="message.error" class="flex mt-4">
@@ -108,7 +110,7 @@ function login() {
             v-model="dataLogin.email"
             type="email"
             class="block w-full mt-1 border-gray-200 rounded-md focus:border-indigo-600 focus:ring focus:ring-opacity-40 focus:ring-indigo-500"
-          >
+          />
         </label>
 
         <label class="block mt-3">
@@ -117,7 +119,7 @@ function login() {
             v-model="dataLogin.password"
             type="password"
             class="block w-full mt-1 border-gray-200 rounded-md focus:border-indigo-600 focus:ring focus:ring-opacity-40 focus:ring-indigo-500"
-          >
+          />
         </label>
 
         <div class="flex items-center justify-between mt-4">
@@ -126,7 +128,8 @@ function login() {
               <input
                 v-model="dataLogin.remember"
                 type="checkbox"
-                class="text-indigo-600 border-gray-200 rounded-md focus:border-indigo-600 focus:ring focus:ring-opacity-40 focus:ring-indigo-500">
+                class="text-indigo-600 border-gray-200 rounded-md focus:border-indigo-600 focus:ring focus:ring-opacity-40 focus:ring-indigo-500"
+              />
               <span class="mx-2 text-sm text-gray-600">Lembrar senha</span>
             </label>
           </div>
@@ -135,7 +138,8 @@ function login() {
             <a
               class="block text-sm text-indigo-700 fontme hover:underline"
               href="#"
-            >Esqueci minha senha</a>
+              >Esqueci minha senha</a
+            >
           </div>
         </div>
 

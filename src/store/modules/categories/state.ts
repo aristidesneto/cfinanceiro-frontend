@@ -5,4 +5,4 @@ export default {
   categories: {},
   categories_income: {},
   categories_expense: {},
-}
+};

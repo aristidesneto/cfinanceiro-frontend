@@ -1,37 +1,38 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
-import { useStore } from 'vuex'
-import { Input, Modal, Select } from 'flowbite-vue'
-import { vMaska } from 'maska'
-import { formatReal } from '@/utils/functions'
-import { alertConfirmed } from '@/config/alert'
-import CategorySelect from '@/composables/forms/CategorySelect.vue'
-import useCategoryApi from '@/composables/apis/useCategories.js'
-import { categoriesToSelect } from '@/utils/categories'
+import { computed, onMounted, ref } from 'vue';
+import { useStore } from 'vuex';
+import { Input, Modal, Select } from 'flowbite-vue';
+import { vMaska } from 'maska';
+import { formatReal } from '@/utils/functions';
+import { alertConfirmed } from '@/config/alert';
+import CategorySelect from '@/composables/forms/CategorySelect.vue';
+import useCategoryApi from '@/composables/apis/useCategories.js';
+import { categoriesToSelect } from '@/utils/categories';
 
-const store = useStore()
+const store = useStore();
 
 const optionsMaska = {
   preProcess: (value: string) => value.replace(/[$,]/g, ''),
   postProcess: (value: string) => {
-    value = value.replace('.', '').replace(',', '').replace(/\D/g, '')
-    const options = { minimumFractionDigits: 2 }
-    const result = new Intl.NumberFormat('pt-BR', options)
-      .format(Number.parseFloat(value) / 100)
-    return `R$ ${result}`
+    value = value.replace('.', '').replace(',', '').replace(/\D/g, '');
+    const options = { minimumFractionDigits: 2 };
+    const result = new Intl.NumberFormat('pt-BR', options).format(
+      Number.parseFloat(value) / 100,
+    );
+    return `R$ ${result}`;
   },
-}
+};
 
 interface FormData {
-  is_recurring: number
-  start_date: object
-  category_id: string
-  amount: string | number
-  amount_sum: string | number
-  observation: string
+  is_recurring: number;
+  start_date: object;
+  category_id: string;
+  amount: string | number;
+  amount_sum: string | number;
+  observation: string;
 }
 
-const now = new Date()
+const now = new Date();
 
 const dataIncome = ref<FormData>({
   is_recurring: 0,
@@ -43,7 +44,7 @@ const dataIncome = ref<FormData>({
   amount_sum: 0,
   amount: 0,
   observation: '',
-})
+});
 
 const dataEditIncome = ref({
   start_date: {},
@@ -51,7 +52,7 @@ const dataEditIncome = ref({
   amount_sum: '',
   amount: '',
   observation: '',
-})
+});
 
 const options = ref({
   isShowModal: false,
@@ -59,18 +60,18 @@ const options = ref({
     edit: false,
     id: 0,
   },
-})
+});
 
-const loadingButton = ref(false)
-const entries = computed(() => store.getters.entries_incomes)
-const group_income = computed(() => store.getters.entries_group_income)
-const detailed_month = ref()
-const categories = ref([])
+const loadingButton = ref(false);
+const entries = computed(() => store.getters.entries_incomes);
+const group_income = computed(() => store.getters.entries_group_income);
+const detailed_month = ref();
+const categories = ref([]);
 
 onMounted(() => {
-  getIncomes()
-  getCategories()
-})
+  getIncomes();
+  getCategories();
+});
 
 // Functions
 async function getIncomes() {
@@ -79,45 +80,52 @@ async function getIncomes() {
     order_by: '+:start_date',
     start_period: `${now.getFullYear()}-01`,
     end_period: `${now.getFullYear()}-12`,
-  }
-  await store.dispatch('incomes', { params })
+  };
+  await store.dispatch('incomes', { params });
 }
 
 async function getCategories() {
   const payload = {
     type: 'income',
     status: 1,
-  }
-  const { list } = useCategoryApi()
-  const { data } = await list(payload)
-  categories.value = categoriesToSelect(data.data, 'income')
+  };
+  const { list } = useCategoryApi();
+  const { data } = await list(payload);
+  categories.value = categoriesToSelect(data.data, 'income');
 }
 
 function closeModal() {
-  options.value.isShowModal = false
-  options.value.editItemIncome.edit = false
+  options.value.isShowModal = false;
+  options.value.editItemIncome.edit = false;
 }
 
 function getDetailMonth(month: number) {
   return Object.values(entries.value).filter((item) => {
-    return item.month_extension === month
-  })
+    return item.month_extension === month;
+  });
 }
 
-function editItemIncome(item: { id: number; start_date_month: number; start_date_year: any; category: { id: string }; amount: string; observation: string }) {
-  options.value.editItemIncome.edit = true
-  options.value.editItemIncome.id = item.id
+function editItemIncome(item: {
+  id: number;
+  start_date_month: number;
+  start_date_year: any;
+  category: { id: string };
+  amount: string;
+  observation: string;
+}) {
+  options.value.editItemIncome.edit = true;
+  options.value.editItemIncome.id = item.id;
   dataEditIncome.value.start_date = {
     month: item.start_date_month - 1,
     year: item.start_date_year,
-  }
-  dataEditIncome.value.category_id = item.category.id
-  dataEditIncome.value.amount = item.amount
-  dataEditIncome.value.observation = item.observation
+  };
+  dataEditIncome.value.category_id = item.category.id;
+  dataEditIncome.value.amount = item.amount;
+  dataEditIncome.value.observation = item.observation;
 }
 
 async function saveItemIncome(item: { id: any; month_extension: number }) {
-  options.value.editItemIncome.edit = false
+  options.value.editItemIncome.edit = false;
   const payload = {
     start_date: {
       month: dataEditIncome.value.start_date.month + 1,
@@ -126,15 +134,15 @@ async function saveItemIncome(item: { id: any; month_extension: number }) {
     category_id: dataEditIncome.value.category_id,
     amount: dataEditIncome.value.amount,
     observation: dataEditIncome.value.observation,
-  }
-  const id = item.id
-  await store.dispatch('updateIncome', { id, payload })
-  await getIncomes()
-  detailed_month.value = getDetailMonth(item.month_extension)
+  };
+  const id = item.id;
+  await store.dispatch('updateIncome', { id, payload });
+  await getIncomes();
+  detailed_month.value = getDetailMonth(item.month_extension);
 }
 
 async function onCreate() {
-  loadingButton.value = true
+  loadingButton.value = true;
   const payload = {
     type: 'income',
     is_recurring: dataIncome.value.is_recurring,
@@ -145,15 +153,15 @@ async function onCreate() {
     category_id: dataIncome.value.category_id,
     amount: dataIncome.value.amount,
     observation: dataIncome.value.observation,
-  }
-  await store.dispatch('createIncome', { payload })
-  await getIncomes()
+  };
+  await store.dispatch('createIncome', { payload });
+  await getIncomes();
   dataIncome.value.start_date = {
     month: now.getMonth(),
     year: now.getFullYear(),
-  }
-  dataIncome.value.amount = 0
-  loadingButton.value = false
+  };
+  dataIncome.value.amount = 0;
+  loadingButton.value = false;
 }
 
 async function onDelete(item: { id: any; month_extension: number }) {
@@ -164,17 +172,17 @@ async function onDelete(item: { id: any; month_extension: number }) {
     cancelButtonText: 'Cancelar',
   }).then(async (res: { isConfirmed: any }) => {
     if (res.isConfirmed) {
-      const id = item.id
-      await store.dispatch('removeIncome', { id })
-      await getIncomes()
-      detailed_month.value = getDetailMonth(item.month_extension)
+      const id = item.id;
+      await store.dispatch('removeIncome', { id });
+      await getIncomes();
+      detailed_month.value = getDetailMonth(item.month_extension);
     }
-  })
+  });
 }
 
 async function openEdit(month: number) {
-  options.value.isShowModal = true
-  detailed_month.value = getDetailMonth(month)
+  options.value.isShowModal = true;
+  detailed_month.value = getDetailMonth(month);
 }
 </script>
 
@@ -198,10 +206,7 @@ async function openEdit(month: number) {
             <form @submit.prevent="onCreate">
               <div class="grid grid-cols-1 gap-6 mt-4 sm:grid-cols-1">
                 <div>
-                  <VueDatePicker
-                    v-model="dataIncome.start_date"
-                    month-picker
-                  />
+                  <VueDatePicker v-model="dataIncome.start_date" month-picker />
                 </div>
 
                 <div>
@@ -220,10 +225,7 @@ async function openEdit(month: number) {
                 </div>
 
                 <div>
-                  <Input
-                    v-model="dataIncome.observation"
-                    label="Observação"
-                  />
+                  <Input v-model="dataIncome.observation" label="Observação" />
                 </div>
               </div>
 
@@ -233,7 +235,11 @@ async function openEdit(month: number) {
                   class="px-4 py-2 text-green-200 bg-green-800 rounded-md hover:bg-green-700 focus:outline-none focus:bg-green-700"
                 >
                   <span v-if="loadingButton">
-                    <FontAwesomeIcon icon="fa-solid fa-circle-notch" spin class="mr-2" />
+                    <FontAwesomeIcon
+                      icon="fa-solid fa-circle-notch"
+                      spin
+                      class="mr-2"
+                    />
                   </span>
                   <span v-else>
                     <FontAwesomeIcon icon="fa fa-floppy-disk" class="mr-2" />
@@ -270,7 +276,8 @@ async function openEdit(month: number) {
               </thead>
               <tbody>
                 <tr
-                  v-for="(value, key) in group_income" :key="key"
+                  v-for="(value, key) in group_income"
+                  :key="key"
                   class="hover:bg-gray-200"
                 >
                   <td class="px-6 py-4 text-gray-700 border-b">
@@ -299,41 +306,51 @@ async function openEdit(month: number) {
     <!-- Modal -->
     <Modal v-if="options.isShowModal" size="7xl" @close="closeModal">
       <template #header>
-        <div class="flex items-center text-lg">
-          Detalhes do mês
-        </div>
+        <div class="flex items-center text-lg">Detalhes do mês</div>
       </template>
       <template #body>
         <table class="min-w-full">
           <thead class="border-b">
             <tr>
-              <th class="px-4 py-2 text-xs leading-4 tracking-wider text-left text-white uppercase border-b border-gray-200 bg-gray-600">
+              <th
+                class="px-4 py-2 text-xs leading-4 tracking-wider text-left text-white uppercase border-b border-gray-200 bg-gray-600"
+              >
                 Mês
               </th>
-              <th class="px-4 py-2 text-xs leading-4 tracking-wider text-left text-white uppercase border-b border-gray-200 bg-gray-600">
+              <th
+                class="px-4 py-2 text-xs leading-4 tracking-wider text-left text-white uppercase border-b border-gray-200 bg-gray-600"
+              >
                 Categoria
               </th>
-              <th class="px-4 py-2 text-xs leading-4 tracking-wider text-left text-white uppercase border-b border-gray-200 bg-gray-600">
+              <th
+                class="px-4 py-2 text-xs leading-4 tracking-wider text-left text-white uppercase border-b border-gray-200 bg-gray-600"
+              >
                 Valor
               </th>
-              <th class="px-4 py-2 text-xs leading-4 tracking-wider text-left text-white uppercase border-b border-gray-200 bg-gray-600">
+              <th
+                class="px-4 py-2 text-xs leading-4 tracking-wider text-left text-white uppercase border-b border-gray-200 bg-gray-600"
+              >
                 Observação
               </th>
-              <th class="px-4 py-2 text-xs leading-4 tracking-wider text-left text-white uppercase border-b border-gray-200 bg-gray-600 text-center">
+              <th
+                class="px-4 py-2 text-xs leading-4 tracking-wider text-left text-white uppercase border-b border-gray-200 bg-gray-600 text-center"
+              >
                 Ação
               </th>
             </tr>
           </thead>
           <tbody class="bg-white">
             <tr
-              v-for="(item, index) in detailed_month" :key="index"
+              v-for="(item, index) in detailed_month"
+              :key="index"
               class="hover:bg-gray-200"
             >
-              <td
-                class="px-4 py-4 border-b border-gray-200 whitespace-nowrap"
-              >
+              <td class="px-4 py-4 border-b border-gray-200 whitespace-nowrap">
                 <VueDatePicker
-                  v-if="options.editItemIncome.edit && options.editItemIncome.id === item.id"
+                  v-if="
+                    options.editItemIncome.edit &&
+                    options.editItemIncome.id === item.id
+                  "
                   v-model="dataEditIncome.start_date"
                   month-picker
                 />
@@ -344,11 +361,12 @@ async function openEdit(month: number) {
                 </div>
               </td>
 
-              <td
-                class="px-4 py-2 border-b border-gray-200 whitespace-nowrap"
-              >
+              <td class="px-4 py-2 border-b border-gray-200 whitespace-nowrap">
                 <Select
-                  v-if="options.editItemIncome.edit && options.editItemIncome.id === item.id"
+                  v-if="
+                    options.editItemIncome.edit &&
+                    options.editItemIncome.id === item.id
+                  "
                   v-model="dataEditIncome.category_id"
                   :options="categories"
                 />
@@ -357,11 +375,12 @@ async function openEdit(month: number) {
                 </div>
               </td>
 
-              <td
-                class="px-4 py-2 border-b border-gray-200 whitespace-nowrap"
-              >
+              <td class="px-4 py-2 border-b border-gray-200 whitespace-nowrap">
                 <Input
-                  v-if="options.editItemIncome.edit && options.editItemIncome.id === item.id"
+                  v-if="
+                    options.editItemIncome.edit &&
+                    options.editItemIncome.id === item.id
+                  "
                   v-model="dataEditIncome.amount"
                   v-maska:[optionsMaska]
                 />
@@ -370,11 +389,12 @@ async function openEdit(month: number) {
                 </div>
               </td>
 
-              <td
-                class="px-4 py-2 border-b border-gray-200 whitespace-nowrap"
-              >
+              <td class="px-4 py-2 border-b border-gray-200 whitespace-nowrap">
                 <Input
-                  v-if="options.editItemIncome.edit && options.editItemIncome.id === item.id"
+                  v-if="
+                    options.editItemIncome.edit &&
+                    options.editItemIncome.id === item.id
+                  "
                   v-model="dataEditIncome.observation"
                 />
                 <div v-else class="text-sm leading-5 text-gray-900">
@@ -386,7 +406,10 @@ async function openEdit(month: number) {
                 class="px-4 py-2 text-sm font-medium leading-5 text-center border-b border-gray-200 whitespace-nowrap"
               >
                 <button
-                  v-if="options.editItemIncome.edit && options.editItemIncome.id === item.id"
+                  v-if="
+                    options.editItemIncome.edit &&
+                    options.editItemIncome.id === item.id
+                  "
                   class="px-2 py-1 text-gray-200 bg-blue-800 rounded-md hover:bg-blue-700 focus:outline-none focus:bg-blue-700 mr-2"
                   title="Salvar alterações"
                   @click="saveItemIncome(item)"
@@ -402,7 +425,10 @@ async function openEdit(month: number) {
                   <FontAwesomeIcon :icon="['far', 'pen-to-square']" />
                 </button>
                 <button
-                  v-if="options.editItemIncome.edit && options.editItemIncome.id === item.id"
+                  v-if="
+                    options.editItemIncome.edit &&
+                    options.editItemIncome.id === item.id
+                  "
                   class="px-2 py-1 text-gray-200 bg-gray-800 rounded-md hover:bg-gray-700 focus:outline-none focus:bg-gray-700 mr-2"
                   title="Cancelar edição"
                   @click="options.editItemIncome.edit = false"

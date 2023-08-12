@@ -1,10 +1,10 @@
-import Swal from 'sweetalert2'
-import { type ToastOptions, toast } from 'vue3-toastify'
+import Swal from 'sweetalert2';
+import { type ToastOptions, toast } from 'vue3-toastify';
 
 export function alertSuccess(data: any) {
   toast.success(data, {
     theme: 'colored',
-  } as ToastOptions)
+  } as ToastOptions);
 }
 
 export function alertError(data: any) {
@@ -12,7 +12,7 @@ export function alertError(data: any) {
     theme: 'colored',
     autoClose: 7000,
     dangerouslyHTMLString: true,
-  } as ToastOptions)
+  } as ToastOptions);
 }
 
 export async function alertConfirmed(data: any) {
@@ -23,5 +23,5 @@ export async function alertConfirmed(data: any) {
     confirmButtonText: data.confirmButtonText,
     confirmButtonColor: data.confirmButtonColor || 'red',
     cancelButtonText: data.cancelButtonText,
-  })
+  });
 }
