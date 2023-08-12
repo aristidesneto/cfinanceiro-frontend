@@ -8,25 +8,11 @@ import CategorySelect from '@/composables/forms/CategorySelect.vue';
 import { monthExtension } from '@/utils/functions';
 import { categoriesToSelect } from '@/utils/categories';
 import useCategoryApi from '@/composables/apis/useCategories';
-import entrieServices from '../../services/entriesService';
+import useEntriesApi from '@/composables/apis/useEntries';
 
 const store = useStore();
 
-// data
-interface IExpense {
-  title: string;
-  is_recurring: boolean;
-  start_date: string;
-  due_date: string;
-  category_id: string;
-  credit_card_id: string;
-  payment: string;
-  parcel: number;
-  amount: number;
-  observation: string;
-}
-
-const dataExpense = ref<IExpense>({
+const dataExpense = ref({
   title: '',
   is_recurring: false,
   start_date: '',
@@ -73,20 +59,32 @@ const fields_cards = [
   { id: 'observation', name: 'Observação' },
 ];
 
-// computed
 const expenses_general = ref([]);
 const expenses_credit_cards = ref([]);
+
 const categories = ref([]);
 const dueDateDisabled = ref(false);
 const isRecurringDisabled = ref(false);
 
 const creditCards = computed(() => {
-  const cards_select = [];
+  const cards_select: any[] = [];
   Object.values(store.getters.credit_cards).forEach((item) => {
     return cards_select.push({ name: item.name, value: item.id });
   });
   return cards_select;
 });
+
+const optionsMaska = {
+  preProcess: (value: string) => value.replace(/[$,]/g, ''),
+  postProcess: (value: string) => {
+    value = value.replace('.', '').replace(',', '').replace(/\D/g, '');
+    const options = { minimumFractionDigits: 2 };
+    const result = new Intl.NumberFormat('pt-BR', options).format(
+      Number.parseFloat(value) / 100,
+    );
+    return `R$ ${result}`;
+  },
+};
 
 // created/mounted
 onMounted(() => {
@@ -98,7 +96,7 @@ watch(
   (newValue, oldValue) => {
     if (newValue) {
       const cards = store.getters.credit_cards;
-      const card = cards.filter((item) => {
+      const card = cards.filter((item: { id: string }) => {
         return item.id === dataExpense.value.credit_card_id;
       })[0];
       const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -140,6 +138,12 @@ function closeModal() {
   options.value.isShowModal = false;
 }
 
+function getCreditCards() {
+  const params = {};
+  store.dispatch('creditCards', { params });
+}
+
+// GETTERS
 async function getCategories() {
   const payload = {
     type: 'expense',
@@ -151,34 +155,19 @@ async function getCategories() {
   categories.value = categoriesToSelect(data.data, 'expense');
 }
 
-const optionsMaska = {
-  preProcess: (value) => value.replace(/[$,]/g, ''),
-  postProcess: (value) => {
-    value = value.replace('.', '').replace(',', '').replace(/\D/g, '');
-    const options = { minimumFractionDigits: 2 };
-    const result = new Intl.NumberFormat('pt-BR', options).format(
-      Number.parseFloat(value) / 100,
-    );
-    return `R$ ${result}`;
-  },
-};
-
-function getCreditCards() {
-  const params = {};
-  store.dispatch('creditCards', { params });
-}
-
 async function getExpenses() {
   const year = now.getFullYear();
   const month = String(now.getMonth() + 1).padStart(2, '0');
   const last_day = new Date(year, Number(month), 0).getDate();
   const params = {
+    type: 'expense',
     order_by: '+:due_date',
     start_period: `${year}-${month}-01`,
     end_period: `${year}-${month}-${last_day}`,
   };
-  const { listExpenses } = entrieServices();
-  const { data } = await listExpenses(params);
+  const { list } = useEntriesApi();
+  const { data } = await list(params);
+
   expenses_general.value = data.data.filter(
     (item) => item.credit_card === null,
   );
@@ -187,8 +176,10 @@ async function getExpenses() {
   );
 }
 
+// CREATE
 async function onCreate() {
   const payload = {
+    type: 'expense',
     title: dataExpense.value.title,
     is_recurring: dataExpense.value.is_recurring,
     start_date: dataExpense.value.start_date,
@@ -202,8 +193,8 @@ async function onCreate() {
     amount: dataExpense.value.amount,
     observation: dataExpense.value.observation,
   };
-  const { createExpense } = entrieServices();
-  await createExpense(payload);
+  const { create } = useEntriesApi();
+  await create(payload);
   getExpenses();
 }
 </script>
@@ -231,7 +222,6 @@ async function onCreate() {
         <div class="p-2 bg-white rounded-md shadow-md">
           <Tabs v-model="activeTab" variant="underline" class="pt-5">
             <Tab name="first" title="Despesas Gerais">
-              <!-- <GeneralExpense /> -->
               <TableComponent :items="expenses_general" :fields="fields" />
             </Tab>
             <Tab name="second" title="Despesas Cartão de Crédito">

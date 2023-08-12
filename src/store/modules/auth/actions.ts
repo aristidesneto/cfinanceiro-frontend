@@ -1,4 +1,4 @@
-import { api, route_web } from '../../../config/api';
+import { api, route_web } from '../../../plugins/api';
 
 function setData(commit, data) {
   commit('SET_AUTH', true);

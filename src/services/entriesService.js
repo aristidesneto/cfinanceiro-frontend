@@ -1,11 +1,12 @@
-// import { api } from '@/config/api'
 import useEntriesApi from '@/composables/apis/useEntries';
 
 export default function entriesServices() {
-  const { listExpenses, createExpense } = useEntriesApi('entries');
+  const { list, create, update, remove } = useEntriesApi('entries');
 
   return {
-    listExpenses,
-    createExpense,
+    list,
+    create,
+    update,
+    remove,
   };
 }

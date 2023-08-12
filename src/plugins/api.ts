@@ -1,7 +1,6 @@
 import axios from 'axios';
-import handleErrors from './handleErrors';
+import handleErrors from '@/config/handleErrors';
 
-// const base_url = 'http://fcontrol-api.homelab.com'
 const base_url = 'http://localhost:8888';
 
 const api = axios.create({

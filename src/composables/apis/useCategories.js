@@ -1,4 +1,4 @@
-import { api } from '@/config/api';
+import { api } from '@/plugins/api';
 import { alertSuccess } from '@/config/alert';
 
 const url = 'categories';

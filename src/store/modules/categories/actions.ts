@@ -1,7 +1,7 @@
 import { alertSuccess } from '../../../config/alert';
 
 // import { categoriesToSelect } from '../../../utils/categories'
-import { api } from '../../../config/api';
+import { api } from '../../../plugins/api';
 
 export default {
   // async categories({ commit }, { payload }) {

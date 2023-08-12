@@ -1,4 +1,4 @@
-import { api } from '../../../config/api';
+import { api } from '../../../plugins/api';
 
 export default {
   async creditCards({ commit }, { params }) {
