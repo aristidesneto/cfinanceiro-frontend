@@ -10,6 +10,8 @@ import {
 } from 'flowbite-vue';
 import { formatReal } from '@/utils/functions';
 
+const emit = defineEmits(['btnEditItem', 'btnDeleteItem'])
+
 const props = defineProps({
   items: {
     type: Object,
@@ -73,15 +75,17 @@ function fieldIsRelationship(field) {
             v-if="props.buttonEdit"
             class="px-2 py-1 text-gray-200 bg-green-800 rounded-md hover:bg-green-700 focus:outline-none focus:bg-green-700 mr-2"
             title="Editar registro"
+            @click="emit('btnEditItem', item)"
           >
-            <FontAwesomeIcon :icon="['far', 'pen-to-square']" />
+            <FontAwesomeIcon :icon="['fas', 'pencil']" />
           </button>
           <button
             v-if="props.buttonRemove"
             class="px-2 py-1 text-gray-200 bg-red-800 rounded-md hover:bg-red-700 focus:outline-none focus:bg-red-700"
             title="Remover registro"
+            @click="emit('btnDeleteItem', item)"
           >
-            <FontAwesomeIcon :icon="['far', 'trash-can']" />
+            <FontAwesomeIcon :icon="['fas', 'trash-can']" />
           </button>
         </TableCell>
       </TableRow>

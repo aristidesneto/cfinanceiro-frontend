@@ -12,6 +12,7 @@ export function alertError(data: any) {
     theme: 'colored',
     autoClose: 7000,
     dangerouslyHTMLString: true,
+    position: toast.POSITION.TOP_CENTER,
   } as ToastOptions);
 }
 
