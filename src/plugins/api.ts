@@ -1,7 +1,7 @@
 import axios from 'axios';
 import handleErrors from '@/config/handleErrors';
 
-const base_url = 'http://localhost:8888';
+const base_url = import.meta.env.VITE_API_BASE_URL
 
 const api = axios.create({
   baseURL: `${base_url}/api/`,

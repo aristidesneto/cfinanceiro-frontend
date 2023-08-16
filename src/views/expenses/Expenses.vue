@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import { useStore } from 'vuex';
-import { Input, Modal, Select, Tab, Tabs, Toggle } from 'flowbite-vue';
+import { Input, Modal, Select, Tab, Tabs, Toggle, Dropdown, ListGroup, ListGroupItem  } from 'flowbite-vue';
 import { vMaska } from 'maska';
 import TableComponent from '@/components/tables/TableComponent.vue';
 import CategorySelect from '@/composables/forms/CategorySelect.vue';
@@ -25,6 +25,7 @@ const dataExpense = ref({
   credit_card_id: '',
   payment: '',
   parcel: 1,
+  payday: '10/08/2023',
   amount: 0,
   observation: '',
 });
@@ -37,6 +38,8 @@ const paymentType = [
 
 const activeTab = ref('first');
 
+const entries = ref([])
+
 const now = new Date();
 const atual_period = ref({
   month: now.getMonth(),
@@ -47,6 +50,7 @@ const period_formated = computed(() => monthExtension(atual_period.value.month) 
 
 const options = ref({
   isShowModal: false,
+  isShowModalPayday: false,
 });
 
 const fields = [
@@ -64,8 +68,8 @@ const fields_cards = [
   { id: 'category.name', name: 'Categoria' },
   { id: 'due_date', name: 'Data de vencimento' },
   { id: 'amount', name: 'Valor', format: 'money' },
-  { id: 'parcel', name: 'Parcela' },
-  { id: 'total_parcel', name: 'Total parcelas' },
+  // { id: 'parcel', name: 'Parcela' },
+  // { id: 'total_parcel', name: 'Total parcelas' },
   { id: 'observation', name: 'Observação' },
 ];
 
@@ -79,7 +83,9 @@ const total_general = computed(() => {
 })
 
 const total_credit_cards = computed(() => {
-  return expenses_credit_cards.value.reduce((accumulator, value) => {
+  return entries.value.filter((item) => {
+    return item.credit_card !== null
+  }).reduce((accumulator, value) => {
     return accumulator + Number.parseFloat(value.amount)
   }, 0)
 })
@@ -88,9 +94,13 @@ const categories = ref([]);
 const dueDateDisabled = ref(false);
 const isRecurringDisabled = ref(false);
 
+const credit_cards_selected = ref()
 const creditCards = computed(() => {
   const cards_select: any[] = [];
   Object.values(store.getters.credit_cards).forEach((item) => {
+    if (item.main_card) {
+      credit_cards_selected.value = item.id
+    }
     return cards_select.push({ name: item.name, value: item.id });
   });
   return cards_select;
@@ -152,6 +162,14 @@ watch(
   { deep: true },
 );
 
+watch(credit_cards_selected, (newValue, oldValue) => {
+  if (oldValue) {
+    expenses_credit_cards.value = entries.value.filter((item) => {
+      return item.credit_card !== null && credit_cards_selected.value === item.credit_card.id
+    });
+  }
+})
+
 // methods/functions
 function openModal() {
   emptyFields();
@@ -161,6 +179,7 @@ function openModal() {
 function closeModal() {
   emptyFields();
   options.value.isShowModal = false;
+  options.value.isShowModalPayday = false;
 }
 
 function getCreditCards() {
@@ -174,7 +193,7 @@ function changeMonth(action: string = 'add') {
   date.setMonth(month)
   atual_period.value.month = date.getMonth()
   atual_period.value.year = date.getFullYear()
-  getExpenses({ month: atual_period.value.month, year: atual_period.value.year })
+  getExpenses({ month: atual_period.value.month, year: atual_period.value.year, credit_card: credit_cards_selected.value })
 }
 
 // GETTERS
@@ -202,12 +221,14 @@ async function getExpenses(options = {}) {
   const { list } = useEntriesApi();
   const { data } = await list(params);
 
+  entries.value = data.data
+
   expenses_general.value = data.data.filter(
     (item) => item.credit_card === null,
   );
-  expenses_credit_cards.value = data.data.filter(
-    (item) => item.credit_card !== null,
-  );
+  expenses_credit_cards.value = data.data.filter((item) => {
+    return item.credit_card !== null && (options.credit_card ? item.credit_card.id === options.credit_card : item.credit_card.main_card)
+  });
 }
 
 // CREATE
@@ -255,6 +276,13 @@ function onEdit(item) {
   options.value.isShowModal = true
 }
 
+function onEditPayday(item) {
+  emptyFields();
+  dataExpense.value.id = item.id
+  dataExpense.value.observation = item.observation
+  options.value.isShowModalPayday = true
+}
+
 async function onUpdate() {
   const payload = {
     title: dataExpense.value.title,
@@ -293,6 +321,18 @@ async function onDelete(item) {
       getExpenses({ month: atual_period.value.month, year: atual_period.value.year })
     }
   });  
+}
+
+async function onPayday() {
+  const payload = {
+    payday: dataExpense.value.payday,
+    observation: dataExpense.value.observation
+  }
+  const { payday } = useEntriesApi()
+  await payday(dataExpense.value.id, payload)
+  options.value.isShowModalPayday = false
+  emptyFields();
+  getExpenses({ month: atual_period.value.month, year: atual_period.value.year })
 }
 
 function emptyFields() {
@@ -362,38 +402,72 @@ function emptyFields() {
               <TableComponent
                 :items="expenses_general"
                 :fields="fields"
+                :buttonView="true"
+                :buttonPay="true"
                 @btn-edit-item="onEdit"
                 @btn-delete-item="onDelete"
+                @btn-payday-item="onEditPayday"
               />
             </Tab>
-            <Tab name="second" title="Despesas Cartão de Crédito">
-              <TableComponent
-                :items="expenses_credit_cards"
-                :fields="fields_cards"
-                @btn-edit-item="onEdit"
-                @btn-delete-item="onDelete"
-              />
+            <Tab name="second" title="Despesas Cartão de Crédito">              
+              <div class="mx-auto">
+                <div class="bg-white dark:bg-gray-800 relative sm:rounded-lg overflow-hidden">
+                    <div class="flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4 p-4">
+                        <div class="w-full md:w-auto flex flex-col md:flex-row space-y-2 md:space-y-0 items-stretch md:items-center justify-end md:space-x-3 flex-shrink-0">
+                          <div class="text-gray-600 text-sm">Cartão de crédito:</div>
+                          <Select
+                            v-model="credit_cards_selected"
+                            :options="creditCards"
+                            placeholder="Selecione o cartão"
+                            size="sm"                          
+                          />
+                          <div class="text-gray-600 text-sm">Valor total: <span class="font-medium">R$ 485,77</span></div>
+                        </div>
+                        <div class="w-full md:w-auto flex flex-col md:flex-row space-y-2 md:space-y-0 items-stretch md:items-center justify-end md:space-x-3 flex-shrink-0">                            
+                          <button
+                            type="button" 
+                            class="flex items-center justify-center text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800">
+                              <FontAwesomeIcon :icon="['fas', 'hand-holding-dollar']" class="mr-2"/> Pagar cartão
+                          </button>
+                          <button 
+                            type="button" 
+                            class="flex items-center justify-center text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800">
+                              <FontAwesomeIcon :icon="['fas', 'plus']" class="mr-2"/> Lançar despesa
+                          </button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                      <TableComponent
+                        :items="expenses_credit_cards"
+                        :fields="fields_cards"
+                        :buttonView="true"
+                        @btn-edit-item="onEdit"
+                        @btn-delete-item="onDelete"
+                      />
+                    </div>                    
+                </div>
+            </div>
             </Tab>
           </Tabs>
 
           <div
               class="flex flex-col items-center px-5 py-5 bg-white border-t xs:flex-row xs:justify-between"
             >
-              <div class="inline-flex mt-2 xs:mt-0">
-                <button
-                  @click="changeMonth('sub')"
-                  class="px-4 py-2 text-sm font-semibold text-gray-800 bg-gray-300 hover:bg-gray-400 rounded-l"
-                >
-                  Mês anterior
-                </button>
-                <button
-                  @click="changeMonth('add')"
-                  class="px-4 py-2 text-sm font-semibold text-gray-800 bg-gray-300 hover:bg-gray-400 rounded-r"
-                >
-                  Próximo mês
-                </button>
-              </div>
+            <div class="inline-flex mt-2 xs:mt-0">
+              <button
+                @click="changeMonth('sub')"
+                class="px-4 py-2 text-sm font-semibold text-gray-800 bg-gray-300 hover:bg-gray-400 rounded-l"
+              >
+                Mês anterior
+              </button>
+              <button
+                @click="changeMonth('add')"
+                class="px-4 py-2 text-sm font-semibold text-gray-800 bg-gray-300 hover:bg-gray-400 rounded-r"
+              >
+                Próximo mês
+              </button>
             </div>
+          </div>
         </div>
       </div>
     </div>
@@ -411,7 +485,6 @@ function emptyFields() {
             Lançamento de despesa
           </span>
         </div>
-        {{ dataExpense }}
       </template>
 
       <template #body>
@@ -525,6 +598,53 @@ function emptyFields() {
               >
                 <FontAwesomeIcon :icon="['fas', 'floppy-disk']" class="mr-1" />
                 Cadastrar
+              </button>
+            </div>
+          </div>
+        </form>
+      </template>
+    </Modal>
+
+    <Modal v-if="options.isShowModalPayday" size="lg" @close="closeModal">
+      <template #header>
+        <div class="flex items-center text-lg">
+          <FontAwesomeIcon :icon="['fas', 'check']" class="mr-2" />
+          Pagar despesa
+        </div>
+      </template>
+
+      <template #body>
+        <form @submit.prevent="onPayday">
+          <div class="grid grid-cols-1 gap-6 mt-4 sm:grid-cols-6">            
+            <div class="sm:col-span-12">
+              <Input
+                v-model="dataExpense.payday"
+                v-maska
+                data-maska="##/##/####"
+                label="Data do pagamento"
+                placeholder="dd/mm/YYYY"
+              />
+            </div>
+
+            <div class="sm:col-span-12">
+              <Input v-model="dataExpense.observation" label="Observação" />
+            </div>
+
+            <div class="sm:col-span-12 text-right">
+              <button
+                type="button"
+                class="text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-800 mr-2"
+                @click="closeModal"
+              >
+                <FontAwesomeIcon :icon="['fas', 'circle-xmark']" class="mr-1" />
+                Fechar
+              </button>
+              <button
+                type="submit"
+                class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 mr-2"
+              >
+                <FontAwesomeIcon :icon="['fas', 'refresh']" class="mr-1" />
+                Salvar
               </button>
             </div>
           </div>

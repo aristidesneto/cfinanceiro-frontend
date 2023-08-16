@@ -26,10 +26,16 @@ export default function useEntriesApi() {
       .then((response) => alertSuccess(response.data.message));
   };
 
+  const payday = async (id, payload, options = {}) => {
+    return await api.put(`${url}/payday/${id}`, payload, options)
+      .then((response) => alertSuccess(response.data.message))
+  }
+
   return {
     list,
     create,
     update,
     remove,
+    payday,
   };
 }
