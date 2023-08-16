@@ -1,0 +1,27 @@
+name: Deploy on Development
+
+on:
+  push:
+    branches: [ "develop" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    name: Build app
+    runs-on: ubuntu-latest
+
+    steps:          
+    - uses: actions/checkout@v3
+
+    - name: Gitlab authentication
+      run: |
+        docker login registry.gitlab.com --username ${{ secrets.GITLAB_USERNAME }} --password ${{ secrets.GITLAB_PASSWORD }}
+
+    - name: Docker build image
+      run: |
+        make docker-build
+
+    - name: Docker push image
+      run: |
+        make docker-push
