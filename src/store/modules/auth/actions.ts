@@ -18,7 +18,10 @@ export default {
     commit('SET_DATA', {});
   },
   async me({ commit }) {
-    const data = await api.get('authenticated/me');
-    setData(commit, data);
+    const data = {
+      ignoreError: true
+    }
+    const response = await api.get('authenticated/me', {data: data})
+    setData(commit, response);
   },
 };

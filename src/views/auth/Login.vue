@@ -42,7 +42,8 @@ function loading() {
 }
 
 onMounted(() => {
-  store.dispatch('me').then(() => router.replace('dashboard'));
+  store.dispatch('me')
+    .then(() => router.replace('dashboard'))
 });
 
 function login() {

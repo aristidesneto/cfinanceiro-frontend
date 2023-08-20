@@ -18,7 +18,13 @@ export default function (error: any) {
   let title = 'Opss!';
   let text = '';
 
+  // if (error.)
+
   switch (error.status) {
+    case 401:
+      text = error.data.message;
+      break;
+
     case 404:
       text = 'A rota informada não foi encontrada ou não existe';
       break;

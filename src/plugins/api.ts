@@ -26,7 +26,9 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
-    handleErrors(error.response);
+    if (! JSON.parse(error.config.ignoreError)) {
+      handleErrors(error.response);
+    }
     return Promise.reject(error);
   },
 );

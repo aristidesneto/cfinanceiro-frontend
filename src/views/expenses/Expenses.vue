@@ -370,7 +370,7 @@ function emptyFields() {
 
     <div class="mt-4">
       <div class="flex flex-wrap -mx-6">
-        <div class="w-full px-6 sm:w-1/2 xl:w-1/3">
+        <div class="w-full px-6 sm:w-1/2 xl:w-1/3 sm:px-2">
           <CardsComponent
             :title="formatReal(total_general)"
             subtitle="Despesas Gerais"
@@ -399,54 +399,60 @@ function emptyFields() {
         <div class="p-2 bg-white rounded-md shadow-md">
           <Tabs v-model="activeTab" variant="underline" class="pt-5">
             <Tab name="first" title="Despesas Gerais">
-              <TableComponent
-                :items="expenses_general"
-                :fields="fields"
-                :buttonView="true"
-                :buttonPay="true"
-                @btn-edit-item="onEdit"
-                @btn-delete-item="onDelete"
-                @btn-payday-item="onEditPayday"
-              />
+              <div class="mx-auto">
+                <div class="bg-white dark:bg-gray-800 relative sm:rounded-lg overflow-hidden">
+                  <div class="overflow-x-auto">
+                    <TableComponent
+                      :items="expenses_general"
+                      :fields="fields"
+                      :buttonView="true"
+                      :buttonPay="true"
+                      @btn-edit-item="onEdit"
+                      @btn-delete-item="onDelete"
+                      @btn-payday-item="onEditPayday"
+                    />
+                  </div>
+                </div>
+              </div>
             </Tab>
             <Tab name="second" title="Despesas Cartão de Crédito">              
               <div class="mx-auto">
                 <div class="bg-white dark:bg-gray-800 relative sm:rounded-lg overflow-hidden">
-                    <div class="flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4 p-4">
-                        <div class="w-full md:w-auto flex flex-col md:flex-row space-y-2 md:space-y-0 items-stretch md:items-center justify-end md:space-x-3 flex-shrink-0">
-                          <div class="text-gray-600 text-sm">Cartão de crédito:</div>
-                          <Select
-                            v-model="credit_cards_selected"
-                            :options="creditCards"
-                            placeholder="Selecione o cartão"
-                            size="sm"                          
-                          />
-                          <div class="text-gray-600 text-sm">Valor total: <span class="font-medium">R$ 485,77</span></div>
-                        </div>
-                        <div class="w-full md:w-auto flex flex-col md:flex-row space-y-2 md:space-y-0 items-stretch md:items-center justify-end md:space-x-3 flex-shrink-0">                            
-                          <button
-                            type="button" 
-                            class="flex items-center justify-center text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800">
-                              <FontAwesomeIcon :icon="['fas', 'hand-holding-dollar']" class="mr-2"/> Pagar cartão
-                          </button>
-                          <button 
-                            type="button" 
-                            class="flex items-center justify-center text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800">
-                              <FontAwesomeIcon :icon="['fas', 'plus']" class="mr-2"/> Lançar despesa
-                          </button>
-                        </div>
-                    </div>
-                    <div class="overflow-x-auto">
-                      <TableComponent
-                        :items="expenses_credit_cards"
-                        :fields="fields_cards"
-                        :buttonView="true"
-                        @btn-edit-item="onEdit"
-                        @btn-delete-item="onDelete"
-                      />
-                    </div>                    
+                  <div class="flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4 p-4">
+                      <div class="w-full md:w-auto flex flex-col md:flex-row space-y-2 md:space-y-0 items-stretch md:items-center justify-end md:space-x-3 flex-shrink-0">
+                        <div class="text-gray-600 text-sm">Cartão de crédito:</div>
+                        <Select
+                          v-model="credit_cards_selected"
+                          :options="creditCards"
+                          placeholder="Selecione o cartão"
+                          size="sm"                          
+                        />
+                        <div class="text-gray-600 text-sm">Valor total: <span class="font-medium">R$ 485,77</span></div>
+                      </div>
+                      <div class="w-full md:w-auto flex flex-col md:flex-row space-y-2 md:space-y-0 items-stretch md:items-center justify-end md:space-x-3 flex-shrink-0">                            
+                        <button
+                          type="button" 
+                          class="flex items-center justify-center text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800">
+                            <FontAwesomeIcon :icon="['fas', 'hand-holding-dollar']" class="mr-2"/> Pagar cartão
+                        </button>
+                        <button 
+                          type="button" 
+                          class="flex items-center justify-center text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800">
+                            <FontAwesomeIcon :icon="['fas', 'plus']" class="mr-2"/> Lançar despesa
+                        </button>
+                      </div>
+                  </div>
+                  <div class="overflow-x-auto">
+                    <TableComponent
+                      :items="expenses_credit_cards"
+                      :fields="fields_cards"
+                      :buttonView="true"
+                      @btn-edit-item="onEdit"
+                      @btn-delete-item="onDelete"
+                    />
+                  </div>                    
                 </div>
-            </div>
+              </div>
             </Tab>
           </Tabs>
 

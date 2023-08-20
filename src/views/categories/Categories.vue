@@ -211,6 +211,7 @@ function onEdit(item: IFormData) {
         <div
           class="z-50 w-11/12 mx-auto overflow-y-auto bg-white rounded shadow-lg modal-container md:max-w-md"
         >
+        {{ dataCategory }}
           <!-- Add margin if you want to see some of the overlay behind the modal -->
           <div class="px-6 py-4 text-left modal-content">
             <!-- Title -->
@@ -265,7 +266,7 @@ function onEdit(item: IFormData) {
                 Fechar
               </button>
               <button
-                v-if="dataCategory.id > 0"
+                v-if="dataCategory.id"
                 class="px-4 py-2 text-green-200 bg-green-800 rounded-md hover:bg-green-700 focus:outline-none focus:bg-green-700"
                 @click="onUpdate()"
               >
